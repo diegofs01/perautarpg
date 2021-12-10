@@ -1,5 +1,5 @@
-DEF _SCRN0 EQU $9800
-DEF WindowStart EQU $9A00
+DEF MapVRAMLoc EQU $9800
+DEF StatusBarVRAMLoc EQU $9A00
 
 SECTION "Tile Map Functions", ROMX
 ;   in:
@@ -27,7 +27,7 @@ GetTileMapDataFromID::
     ld c, a                     ;   │ copia o tamanho em bytes do tilemap no reg BC
     ld a, [hl+]                 ;   │
     ld b, a                     ;   ┘
-    ld hl, _SCRN0               ;   copia o endereço da VRAM no reg HL
+    ld hl, MapVRAMLoc           ;   copia o endereço da VRAM no reg HL
     ret                         ;   retorna pra função anterior
 
 ;   in:
@@ -54,7 +54,7 @@ GetTileMapAttributeFromID::
     ld c, a                     ;   │ copia o tamanho em bytes do tilemap no reg BC
     ld a, [hl+]                 ;   │
     ld b, a                     ;   ┘
-    ld hl, _SCRN0               ;   copia o endereço da VRAM no reg HL
+    ld hl, MapVRAMLoc           ;   copia o endereço da VRAM no reg HL
     ret                         ;   retorna pra função anterior
 
 ;   in:
@@ -74,16 +74,16 @@ GetTileSetIDFromTileMapID::
     ld a, [hl]                  ;   move o byte apontado pelo registrador HL pro acumulador
     ret                         ;   retorna pra função anterior
 
-; Funções para retornar a localização da 'window' que fica na parte de baixo da tela
-GetWindowData::
-    ld de, Window_Tiles
-    ld bc, Window_BytesLength
-    ld hl, WindowStart
+; Funções para retornar a localização da 'barra de status' que fica na parte de baixo da tela
+GetStatusBarData::
+    ld de, StatusBar_Tiles
+    ld bc, StatusBar_BytesLength
+    ld hl, StatusBarVRAMLoc
     ret
-GetWindowAttributes::
-    ld de, Window_Attributes
-    ld bc, Window_BytesLength
-    ld hl, WindowStart
+GetStatusBarAttributes::
+    ld de, StatusBar_Attributes
+    ld bc, StatusBar_BytesLength
+    ld hl, StatusBarVRAMLoc
     ret
 
 ;   in:
@@ -92,25 +92,27 @@ GetWindowAttributes::
 ;   out:
 ;       A = Byte/Data em uma posição específica do 'array' de colisão
 GetColisionData::
-    sla a                       ;   ────┐ 4 Bit Shift Left Aritmetic, equivalente a multiplicar o acumulador por 16
-    sla a                       ;       ├              
-    sla a                       ;       │ Offset da tabela de tilemap com base no ID
-    sla a                       ;   ────┘ ID 0 = Offset 0, ID 1 = Offset 16, etc
-    add a, 7                    ;   Offset pro ponteiro com a tabela de colisao
-    ld c, a                     ;   ┐ move o offset pro reg BC
-    ld b, 0                     ;   ┘
-    ld hl, TileMaps             ;   move o ponteiro da tabela de tilemap pro reg HL
-    add hl, bc                  ;   adiciona o offset no ponteiro
-    ld a, [hl+]                 ;   ┐
-    ld c, a                     ;   │ move o ponteiro da tabela de colisao pro reg BC
-    ld a, [hl]                  ;   │
-    ld b, a                     ;   ┘
-    ld h, a                     ;   ┐
-    ld a, c                     ;   │ copia o ponteiro da tabela de colisao pro reg HL   
-    ld l, a                     ;   ┘      
-    add hl, de                  ;   incrementa o ponteiro com o offset no reg DE
-    ld a, [hl]                  ;   copia o byte/data de colisao pro acumulador
-    ret                         ;   retorna pra função anterior
+    ;sla a                       ;   ────┐ 4 Bit Shift Left Aritmetic, equivalente a multiplicar o acumulador por 16
+    ;sla a                       ;       ├              
+    ;sla a                       ;       │ Offset da tabela de tilemap com base no ID
+    ;sla a                       ;   ────┘ ID 0 = Offset 0, ID 1 = Offset 16, etc
+    ;add a, 7                    ;   Offset pro ponteiro com a tabela de colisao
+    ;ld c, a                     ;   ┐ move o offset pro reg BC
+    ;ld b, 0                     ;   ┘
+    ;ld hl, TileMaps             ;   move o ponteiro da tabela de tilemap pro reg HL
+    ;add hl, bc                  ;   adiciona o offset no ponteiro
+    ;ld a, [hl+]                 ;   ┐
+    ;ld c, a                     ;   │ move o ponteiro da tabela de colisao pro reg BC
+    ;ld a, [hl]                  ;   │
+    ;ld b, a                     ;   ┘
+    ;ld h, a                     ;   ┐
+    ;ld a, c                     ;   │ copia o ponteiro da tabela de colisao pro reg HL   
+    ;ld l, a                     ;   ┘      
+    ;add hl, de                  ;   incrementa o ponteiro com o offset no reg DE
+    ;ld a, [hl]                  ;   copia o byte/data de colisao pro acumulador
+    ;ret                         ;   retorna pra função anterior
+    ld a, 1
+    ret
 
 ;   in:
 ;       A = ID do Tile Map
@@ -303,7 +305,7 @@ House02_Warps:
 Map02_Tiles:        INCBIN "data/maps/map02.tilemap"
 Map02_Attributes:   INCBIN "data/maps/map02.attrmap"
 Map02_BytesLength   EQU 320
-Map02_TileSetId     EQU 0  
+Map02_TileSetId     EQU 2
 Map02_Colision:
     DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
     DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
@@ -343,14 +345,6 @@ Map02_Warps:
     DB       0,      80,          144,           80,         0,
     DB     255,     255
 
-Window_Tiles:
-    DB $59,$59,$59,$59,$59,$59,$59,$59,$59,$59
-    DB $59,$59,$59,$59,$59,$59,$59,$59,$59,$59
-    DB $71,$74,$74,$74,$72,$74,$74,$74,$5C,$74
-    DB $66,$74,$6D,$74,$59,$59,$59,$59,$59,$59                
-DEF Window_BytesLength EQU 40
-Window_Attributes:
-    DB $07,$07,$07,$07,$07,$07,$07,$07,$07,$07
-    DB $07,$07,$07,$07,$07,$07,$07,$07,$07,$07
-    DB $07,$07,$07,$07,$07,$07,$07,$07,$07,$07
-    DB $07,$07,$07,$07,$07,$07,$07,$07,$07,$07
+StatusBar_Tiles:        INCBIN "data/maps/statusbar.tilemap"
+StatusBar_Attributes:   INCBIN "data/maps/statusbar.attrmap"
+StatusBar_BytesLength   EQU 40

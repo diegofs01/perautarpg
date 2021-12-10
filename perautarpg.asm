@@ -12,6 +12,7 @@ KEY_RIGHT   EQU %00000001           ;   ────┘
 
 DEF PlayerSpriteOffsetL EQU 4       ;   Offset em bytes da sprite esquerda do jogador
 DEF PlayerSpriteOffsetR EQU 8       ;   Offset em bytes da sprite direita do jogador
+DEF CursorSpriteOffset EQU 12       ;   Offset em bytes da sprite direita do jogador
 
 SECTION "Header", ROM0[$100]
 	jp Start                        ;   pula/chama a função Start
@@ -38,21 +39,20 @@ Start:
 	ld [rNR52], a	                    ;   move valor do acumulador pro registrador 'mestre' do audio
     call WaitVBlank                     ;   chama a função WaitVBlank
     call DesligarLCD                    ;   chama a função DesligarLCD
+
+    ld a, 144                           ;   ┐ seta a posição Y da window layer
+    ld [rWY], a                         ;   ┘
+    ld a, 103                           ;   ┐ seta a posição X da window layer
+    ld [rWX], a                         ;   ┘
+
     call init                           ;   chama a função init
     call LigarLCD                       ;   chama a função LigarLCD
 
 GameLoop:
     call JoypadRead                     ;   chama a função JoypadRead
-    ld [KeyRead], a                     ;   move o valor do acumulador pro byte apontado pela label
     call CheckKeyRead                   ;   chama a função CheckKeyRead
     call WaitVBlank                     ;   chama a função WaitVBlank
-    ld hl, 10000                        ;   move o valor pro reg HL
-.loop
-    dec hl                              ;   decrementa HL
-    ld a, h                             ;   move valor do reg H pro acumulador
-    or a, l                             ;   operação lógica OU com acumulador e o reg L
-    cp 0                                ;   compara acumulador com o valor
-    jp nz, .loop                        ;   pula de volta pro começo da função caso a flag Z (zero) nao estiver setado
+    call ArtificialDelay
     jp GameLoop                             ;   Eternal Loop
 
 init:
@@ -90,11 +90,11 @@ init:
     ld de, rBCPD                        ;   move o valor da label pro registrador DE
     call WritePaletteData               ;   chama a função WritePaletteData
 
-    call GetWindowData                  ;   chama a função GetWindowData
-    call CopyMapData                      ;   chama a função CopyTiles
+    call GetStatusBarData               ;   chama a função GetStatusBarData
+    call CopyStatusBarData              ;   chama a função CopyStatusBarData
     call SetCGBVRAMBank1                ;   chama a função SetCGBVRAMBank1
-    call GetWindowAttributes            ;   chama a função GetWindowAttributes
-    call CopyMapData                      ;   chama a função CopyTiles
+    call GetStatusBarAttributes         ;   chama a função GetStatusBarAttributes
+    call CopyStatusBarData              ;   chama a função CopyStatusBarData
     call SetCGBVRAMBank0                ;   chama a função SetCGBVRAMBank0
     ; End DEBUG Stuff
 
@@ -114,6 +114,14 @@ init:
     call DMARoutine                     ;   chama a função DMARoutine
 
     call UpdatePlayerSpritePosition     ;   chama a função UpdatePlayerSpritePosition
+
+    ld a, 222
+    ld[Health], a
+    ld[Mana], a
+    ld[Experience], a
+    ld[Attack], a
+    ld[Defense], a
+    ld[Speed], a
 
 	ret                                 ;   retorna pra função anterior
 
@@ -228,6 +236,7 @@ JoypadRead:
 	ld a, P1F_GET_NONE                  ;   move o valor da label pro acumulador
 	ld [rP1], a                         ;   move o valor do acumulador no registrador de leitura do joypad
 	ld a, b                             ;   move o valor do reg B pro acumulador
+    ld [KeyRead], a                     ;   move o valor do acumulador pro byte apontado pela label
 	ret                                 ;   retorna para a função anterior
 
 ;   Função para mover a sprite do jogador para a direita
@@ -389,10 +398,10 @@ CheckKeyRead:
     cp 0                                ;   compara o acumulador com o valor
     call nz, MoverSpriteBaixo           ;   chama a função MoverSpriteBaixo caso a flag Z (zero) nao estiver setado
 
-    ;ld a, [KeyRead]                     ;   move o byte apontado pela label pro acumulador
-    ;and KEY_START                       ;   operação lógica AND no acumulador com o valor da label
-    ;cp 0                                ;   compara o acumulador com o valor
-    ;call nz, EscurecerMapa               ;   chama a função MudarMapa caso a flag Z (zero) nao estiver setado
+    ld a, [KeyRead]                     ;   move o byte apontado pela label pro acumulador
+    and KEY_START                       ;   operação lógica AND no acumulador com o valor da label
+    cp 0                                ;   compara o acumulador com o valor
+    call nz, ToggleStartMenu                 ;   chama a função ToggleStartMenu caso a flag Z (zero) nao estiver setado
 
     ret                                 ;   retorna para a função anterior
 
@@ -424,7 +433,7 @@ DesligarLCD:
     ld [rLCDC], a	                    ;   Move valor do acumulador pro registrador de controle do LCD
     ret                                 ;   Retorna a função anterior
 LigarLCD:
-    ld a, LCDCF_ON | LCDCF_OBJ16 | LCDCF_OBJON | LCDCF_BGON ;   Move valor resultado do OR das labels pro acumulador 
+    ld a, LCDCF_ON | LCDCF_WINON | LCDCF_WIN9C00 | LCDCF_OBJ16 | LCDCF_OBJON | LCDCF_BGON ;   Move valor resultado do OR das labels pro acumulador 
     ld [rLCDC], a	                    ;   move valor do acumulador pro registrador de controle do LCD
     ret                                 ;   Retorna a função anterior
 
@@ -495,14 +504,14 @@ MostrarPosicaoNoMapa:
     ld d, a                             ;   armazena a 'unidade' no reg D (0 -> 9)
 .endPosX:
     ld hl, TilesPosX                    ;   copia ponteiro pra armazenar os tiles da posição X
-    ld a, 116                           ;   adiciona o offset dos tiles no acumulador
-    add b                               ;   adiciona o valor da 'centena' (ex: 116 + 1 = tile id 117 / '1')
+    ld a, 144                           ;   adiciona o offset dos tiles no acumulador
+    add b                               ;   adiciona o valor da 'centena' (ex: 144 + 1 = tile id 117 / '1')
     ld [hl+], a                         ;   armazena o tileid na WRAM e incrementa o ponteiro da WRAM
-    ld a, 116                           ;   adiciona o offset dos tiles no acumulador
-    add c                               ;   adiciona o valor da 'dezena' (ex: 116 + 3 = tile id 119 / '3')
+    ld a, 144                           ;   adiciona o offset dos tiles no acumulador
+    add c                               ;   adiciona o valor da 'dezena' (ex: 144 + 3 = tile id 119 / '3')
     ld [hl+], a                         ;   armazena o tileid na WRAM e incrementa o ponteiro da WRAM
-    ld a, 116                           ;   adiciona o offset dos tiles no acumulador
-    add d                               ;   adiciona o valor da 'unidade' (ex: 116 + 6 = tile id 122 / '6')
+    ld a, 144                           ;   adiciona o offset dos tiles no acumulador
+    add d                               ;   adiciona o valor da 'unidade' (ex: 144 + 6 = tile id 122 / '6')
     ld [hl], a                          ;   armazena o tileid na WRAM
 
 .posicaoY:                      ;   Preparando para calcular a 'centena' da posição Y (Y >= 100)
@@ -531,14 +540,14 @@ MostrarPosicaoNoMapa:
     ld d, a                             ;   armazena a 'unidade' no reg D (0 -> 9)
 .endPosY:
     ld hl, TilesPosY                    ;   copia ponteiro pra armazenar os tiles da posição Y
-    ld a, 116                           ;   adiciona o offset dos tiles no acumulador
-    add b                               ;   adiciona o valor da 'centena' (ex: 116 + 1 = tile id 117 / '1')
+    ld a, 144                           ;   adiciona o offset dos tiles no acumulador
+    add b                               ;   adiciona o valor da 'centena' (ex: 144 + 1 = tile id 117 / '1')
     ld [hl+], a                         ;   armazena o tileid na WRAM e incrementa o ponteiro da WRAM
-    ld a, 116                           ;   adiciona o offset dos tiles no acumulador
-    add c                               ;   adiciona o valor da 'dezena' (ex: 116 + 3 = tile id 119 / '3')
+    ld a, 144                           ;   adiciona o offset dos tiles no acumulador
+    add c                               ;   adiciona o valor da 'dezena' (ex: 144 + 3 = tile id 119 / '3')
     ld [hl+], a                         ;   armazena o tileid na WRAM e incrementa o ponteiro da WRAM
-    ld a, 116                           ;   adiciona o offset dos tiles no acumulador
-    add d                               ;   adiciona o valor da 'unidade' (ex: 116 + 6 = tile id 122 / '6')
+    ld a, 144                           ;   adiciona o offset dos tiles no acumulador
+    add d                               ;   adiciona o valor da 'unidade' (ex: 144 + 6 = tile id 122 / '6')
     ld [hl], a                          ;   armazena o tileid na WRAM
 .endF
     ld a, [PlayerPosY]                  ;   ┐ copia a posição Y no reg B
@@ -549,8 +558,8 @@ MostrarPosicaoNoMapa:
     ld d, a                             ;   move o dado da colisão no reg D
 .endCol:
     ld hl, TilesCol                     ;   copia ponteiro pra armazenar o tile da colisão
-    ld a, 116                           ;   adiciona o offset dos tiles no acumulador
-    add d                               ;   adiciona o dado da colisão (ex: 116 + 1 = tile id 117 / '1')
+    ld a, 144                           ;   adiciona o offset dos tiles no acumulador
+    add d                               ;   adiciona o dado da colisão (ex: 144 + 1 = tile id 117 / '1')
     ld [hl], a                          ;   armazena o tileid na WRAM
 
     call DesligarLCD                    ;   chama a função DesligarLCD
@@ -567,29 +576,29 @@ MostrarPosicaoNoMapa:
 
     ld de, TilesCol                     ;   copia o ponteiro do tile pro reg DE
     ld bc, 1                            ;   copia a quantidade em bytes de tiles pra copiar no reg BC
-    ld hl, $9A29                        ;   copia o endereço da VRAM para copiar o tile no reg HL
+    ld hl, $9A2F                        ;   copia o endereço da VRAM para copiar o tile no reg HL
     call CopyTiles                      ;   chama a função CopyTiles
 
     ld a, [ActiveMapId]                 ;   ┐ copia a o id do mapa no reg D
     ld d, a                             ;   ┘
     ld hl, TilesCol                     ;   copia ponteiro pra armazenar o tile da id do mapa
-    ld a, 116                           ;   adiciona o offset dos tiles no acumulador
-    add d                               ;   adiciona o id do mapa (ex: 116 + 1 = tile id 117 / '1')
+    ld a, 144                           ;   adiciona o offset dos tiles no acumulador
+    add d                               ;   adiciona o id do mapa (ex: 144 + 1 = tile id 117 / '1')
     ld [hl], a                          ;   copia o tile na WRAM
     ld de, TilesCol                     ;   copia ponteiro pra armazenar o tile da id do mapa
     ld bc, 1                            ;   copia a quantidade em bytes de tiles pra copiar no reg BC
-    ld hl, $9A2B                        ;   copia o endereço da VRAM para copiar o tile no reg HL
+    ld hl, $9A31                        ;   copia o endereço da VRAM para copiar o tile no reg HL
     call CopyTiles                      ;   chama a função CopyTiles
 
     ld a, [ActiveTilesetId]             ;   ┐ copia a o id do tileset no reg D
     ld d, a                             ;   ┘
     ld hl, TilesCol                     ;   copia ponteiro pra armazenar o tile da id do tileset
-    ld a, 116                           ;   adiciona o offset dos tiles no acumulador
-    add d                               ;   adiciona o id do tileset (ex: 116 + 1 = tile id 117 / '1')
+    ld a, 144                           ;   adiciona o offset dos tiles no acumulador
+    add d                               ;   adiciona o id do tileset (ex: 144 + 1 = tile id 117 / '1')
     ld [hl], a                          ;   copia o tile na WRAM
     ld de, TilesCol                     ;   copia ponteiro pra armazenar o tile da id do tileset
     ld bc, 1                            ;   copia a quantidade em bytes de tiles pra copiar no reg BC
-    ld hl, $9A2D                        ;   copia o endereço da VRAM para copiar o tile no reg HL
+    ld hl, $9A33                        ;   copia o endereço da VRAM para copiar o tile no reg HL
     call CopyTiles                      ;   chama a função CopyTiles
 
     call LigarLCD                       ;   chama a função LigarLCD
@@ -699,6 +708,224 @@ CopyMapData:
 	jp nz, .loop    	                ;   pula de volta pro começo da função caso a flag Z (zero) nao estiver setado
 	ret					                ;   retorna para a função anterior
 
+    ;Barra de status na parte de baixo da tela
+CopyStatusBarData:
+    ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
+    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
+.loop:
+	ld a, [de]			                ;   copia tile pro acumulador
+    add 128
+	ld [hli], a			                ;   copia tile do acumulador pra VRAM apontado pelo registrador HL e incrementa HL
+	inc de				                ;   incremtenta o ponteiro com os tiles
+	dec bc				                ;   decrementa a quantidade de tiles a ser copiado 
+    ld a, d                             ;   ┐
+    ld [TempMapD], a                    ;   │ armazena o ponteiro dos tiles na WRAM
+    ld a, e                             ;   │
+    ld [TempMapE], a                    ;   ┘
+    ld a, [MapLineCount]                ;   copia o contador de linha pro acumulador
+    add 1                               ;   incrementa o contador
+    cp a, 20                            ;   compara o contador
+    jp nz, .continue                    ;   pula pra função .continue caso a flag Z (zero) nao estiver setado
+    ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
+    ld [MapLineCount], a                ;   copia o valor no acumulador na WRAM
+    ld d, 0                             ;   ┐ copia o valor em bytes para incrementar o ponteiro da VRAM no reg DE
+    ld e, 12                            ;   ┘
+    add hl, de                          ;   incrementa a posição do ponteiro da VRAM em DE bytes
+.continue:
+    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
+    ld a, [TempMapD]                    ;   ┐
+    ld d, a                             ;   │ recupera o ponteiro dos tiles
+    ld a, [TempMapE]                    ;   │
+    ld e, a                             ;   ┘
+	ld a, b				                ;   ┐ copia a quantidade de tiles restanes no acumulador
+	or a, c				                ;   ┘
+	jp nz, .loop    	                ;   pula de volta pro começo da função caso a flag Z (zero) nao estiver setado
+	ret					                ;   retorna para a função anterior
+
+    ;Função pra copiar os menus/windows
+CopyMenuData:
+    ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
+    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
+.loop:
+    ld a, [rVBK]                        ;   copia o banco da vram atual
+    and %00000001                       ;   'filtra' o valor (0 ou 1)
+    cp 1                                ;   compara se o valor é igual a 1
+    ld a, [de]			                ;   copia o tile pro acumulador
+    jp z, .copy                         ;   pula pra função .copy se a flag Z (zero) estiver setada
+    add 128                             ;   adiciona 128 no acumulador
+.copy:
+	ld [hli], a			                ;   copia tile do acumulador pra VRAM apontado pelo registrador HL e incrementa HL
+	inc de				                ;   incremtenta o ponteiro com os tiles
+	dec bc				                ;   decrementa a quantidade de tiles a ser copiado 
+    ld a, d                             ;   ┐
+    ld [TempMapD], a                    ;   │ armazena o ponteiro dos tiles na WRAM
+    ld a, e                             ;   │
+    ld [TempMapE], a                    ;   ┘
+    ld a, [MapLineCount]                ;   copia o contador de linha pro acumulador
+    add 1                               ;   incrementa o contador
+    cp a, 8                             ;   compara o contador
+    jp nz, .continue                    ;   pula pra função .continue caso a flag Z (zero) nao estiver setado
+    ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
+    ld [MapLineCount], a                ;   copia o valor no acumulador na WRAM
+    ld d, 0                             ;   ┐ copia o valor em bytes para incrementar o ponteiro da VRAM no reg DE
+    ld e, 24                            ;   ┘
+    add hl, de                          ;   incrementa a posição do ponteiro da VRAM em DE bytes
+.continue:
+    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
+    ld a, [TempMapD]                    ;   ┐
+    ld d, a                             ;   │ recupera o ponteiro dos tiles
+    ld a, [TempMapE]                    ;   │
+    ld e, a                             ;   ┘
+	ld a, b				                ;   ┐ copia a quantidade de tiles restanes no acumulador
+	or a, c				                ;   ┘
+	jp nz, .loop    	                ;   pula de volta pro começo da função caso a flag Z (zero) nao estiver setado
+	ret					                ;   retorna para a função anterior
+
+    ; Delay artificial
+ArtificialDelay:
+    ld hl, 15000                        ;   move o valor pro reg HL
+.loop
+    dec hl                              ;   decrementa HL
+    ld a, h                             ;   move valor do reg H pro acumulador
+    or a, l                             ;   operação lógica OU com acumulador e o reg L
+    cp 0                                ;   compara acumulador com o valor
+    jp nz, .loop                        ;   pula de volta pro começo da função caso a flag Z (zero) nao estiver setado
+    ret					                ;   retorna para a função anterior
+
+    ; Mostra/Esconde o menu e trava o input do keypad
+ToggleStartMenu:
+    call WindowFunctions.RenderStartMenu    ;   Renderiza o Start Menu
+    ld a, 1                                 ;   ┐ Seta o índice do cursor do Start Menu
+    ld [MenuEntry], a                       ;   ┘
+    ld a, 0                                 ;   ┐ Move o Menu pra tela
+    ld [rWY], a                             ;   ┘
+    jp .initCursor                          ;   Pula pra função que 'inicia' o cursor
+
+.hideStartMenu:
+    ld hl, SpritesDataRAM               ;   ┐ Copia o endereço das sprites da memoria
+    ld de, CursorSpriteOffset           ;   │ Copia o offset do cursor
+    add hl, de                          ;   ┘ Incrementa o offset no endereço
+    ld a, 0                             ;   ┐
+    ld [hl+], a                         ;   │ move/esconde a sprite pra fora da tela
+    ld [hl+], a                         ;   ┘
+
+    ld a, HIGH(SpritesDataRAM)          ;   ┐ persiste a pos da sprite na vram
+    call DMARoutine                     ;   ┘
+
+    ld a, 144                           ;   ┐ Move o Menu pra fora tela
+    ld [rWY], a                         ;   ┘
+    ret
+    
+.initCursor:
+    ld hl, SpritesDataRAM               ;   ┐ Copia o endereço das sprites da memoria
+    ld de, CursorSpriteOffset           ;   │ Copia o offset do cursor
+    add hl, de                          ;   ┘ Incrementa o offset no endereço
+    ld a, 24                            ;   ┐
+    ld [hl+], a                         ;   │ move a sprite pra posição certa do menu
+    ld a, 104                           ;   │
+    ld [hl], a                          ;   ┘
+
+    ld a, HIGH(SpritesDataRAM)          ;   ┐ persiste a pos da sprite na vram
+    call DMARoutine                     ;   ┘
+
+;loop de leitura do keypad no primeiro menu
+.menuKeyreadLoop:
+    call ArtificialDelay                ;   chama a função de delay
+    call JoypadRead                     ;   chama a função de leitura do keypad
+
+    ld a, [KeyRead]                     ;   ┐
+    and KEY_START                       ;   │ START fecha o StartMenu
+    cp 0                                ;   │
+    jp nz, .hideStartMenu               ;   ┘
+
+    ld a, [KeyRead]                     ;   ┐
+    and KEY_B                           ;   │ B fecha o StartMenu
+    cp 0                                ;   │
+    jp nz, .hideStartMenu               ;   ┘
+
+    ld a, [KeyRead]                     ;   ┐
+    and KEY_A                           ;   │ A executa uma ação de acordo com a posição do cursor
+    cp 0                                ;   │
+    call nz, MoverCursor.Acao           ;   ┘
+    
+    ld a, [KeyRead]                     ;   ┐
+    and KEY_DOWN                        ;   │ DOWN move o cursor pra baixo
+    cp 0                                ;   │
+    call nz, MoverCursor.Baixo          ;   ┘
+
+    ld a, [KeyRead]                     ;   ┐
+    and KEY_UP                          ;   │ UP move o cursor pra cima
+    cp 0                                ;   │
+    call nz, MoverCursor.Cima           ;   ┘
+
+    jp .menuKeyreadLoop                 ;   Pula de volta pro começo do loop
+
+WindowFunctions:
+.RenderStartMenu:
+    call WaitVBlank                     ;   Loop de espera do VBlank
+    call DesligarLCD                    ;   Desliga a tela
+
+    call GetMenuData                    ;   chama a função GetMenuData
+    call CopyMenuData                   ;   chama a função CopyMenuData
+    call SetCGBVRAMBank1                ;   chama a função SetCGBVRAMBank1
+    call GetMenuAttributes              ;   chama a função GetMenuAttributes
+    call CopyMenuData                   ;   chama a função CopyMenuData
+    call SetCGBVRAMBank0                ;   chama a função SetCGBVRAMBank0
+
+    call LigarLCD                       ;   Liga a tela
+    ret
+
+MoverCursor:
+.Baixo:
+    ld a, [MenuEntry]                   ;   Copia o indice do menu no acumulador
+    cp 5                                ;   Compara se o índice é igual a 5 (Z)
+    ret z                               ;   Retorna a função anterior se sim (Z)
+
+    add 1                               ;   ┐ incrementa o índice do cursor
+    ld [MenuEntry], a                   ;   ┘
+
+    ld hl, SpritesDataRAM               ;   move o valor da label pro registrador HL
+    ld de, CursorSpriteOffset           ;   move o valor da label pro registrador DE
+    add hl, de                          ;   adiciona o valor do reg DE no reg HL
+    ld a, [hl]                          ;   ┐
+    add 16                              ;   │ incrementa a posição do cursor
+    ld [hl], a                          ;   ┘
+
+    ld a, HIGH(SpritesDataRAM)          ;  ┐ persiste a posição do cursor
+    call DMARoutine                     ;  ┘
+    ret
+
+.Cima:
+    ld a, [MenuEntry]                   ;   Copia o indice do menu no acumulador
+    cp 1                                ;   Compara se o índice é igual a 5 (Z)
+    ret z                               ;   Retorna a função anterior se sim (Z)
+
+    sub 1                               ;   ┐ decrementa o índice do cursor
+    ld [MenuEntry], a                   ;   ┘
+
+    ld hl, SpritesDataRAM               ;   move o valor da label pro registrador HL
+    ld de, CursorSpriteOffset           ;   move o valor da label pro registrador DE
+    add hl, de                          ;   adiciona o valor do reg DE no reg HL
+    ld a, [hl]                          ;   ┐
+    sub 16                              ;   │ decrementa a posição do cursor
+    ld [hl], a                          ;   ┘
+
+    ld a, HIGH(SpritesDataRAM)          ;   ┐ persiste a posição do cursor
+    call DMARoutine                     ;   ┘
+    ret
+
+.Acao:
+    ld a, [MenuEntry]                   ;   Copia o indice do menu no acumulador
+    cp 5                                ;   Compara se o índice é igual a 5 (Z)
+    jp z, .hideMenu                     ;   Pula pra função de esconder o menu se sim (Z)
+    ret
+
+.hideMenu:
+    call ToggleStartMenu.hideStartMenu  ;   chama a função que fecha/esconde o StartMenu
+    pop hl                              ;   remove o ponteiro da função ToggleStartMenu.menuKeyreadLoop
+                                        ;   da stack, previne que fique em loop como se estivesse no StartMenu
+    ret
+
 SECTION "OAM DMA", HRAM
 hOAMDMA: ds 8                           ;   Espaço na HRAM para alocar a função de cópia de bytes pra OAM
 
@@ -714,6 +941,16 @@ TilesCol: ds 1                          ;   Tiles para exibir o tipo de colisão
 TempMapD: ds 1                          ;   Armazenamento temporario do reg D
 TempMapE: ds 1                          ;   Armazenamento temporario do reg E
 MapLineCount: ds 1                      ;   Armazenamento do contador de linha do CopyMapData
+MenuEntry: ds 1                         ;   Índice do Menu
+
+SECTION "Player", WRAM0
+Health: ds 1                            ;   ┐
+Mana: ds 1                              ;   │
+Experience: ds 1                        ;   │
+Attack: ds 1                            ;   │ Player Status
+Defense: ds 1                           ;   │
+Speed: ds 1                             ;   │
+;Inventory                              ;   ┘
 
 SECTION "Variaveis_OAM", WRAM0[$C100]
 SpritesDataRAM: ds 12                   ;   Data das sprites para copiar a OAM

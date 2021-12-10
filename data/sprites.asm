@@ -46,7 +46,8 @@ SpritesData:
 	DB 0, 0, 0, 0
 	DB 0, 0, 2, %00000000
 	DB 0, 0, 4, %00000000
-DEF SpritesDataBytesLength EQU 12
+	DB 0, 0, 2, %00000000
+DEF SpritesDataBytesLength EQU 16
 
 SpritesPaletteData:
 	; Gameboy Color palette 0
