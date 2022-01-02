@@ -8,7 +8,7 @@ SECTION "Tile Map Functions", ROMX
 ;       DE = Endereço dos dados do TileMap
 ;       BC = Tamanho em bytes do TileMap
 ;       HL = Endereço da VRAM pertencente ao TileMap
-GetTileMapDataFromID::
+GetMapData::
     sla a                       ;   ────┐ 4 Bit Shift Left Aritmetic, equivalente a multiplicar o acumulador por 16
     sla a                       ;       ├ 
     sla a                       ;       │ Offset da tabela de tilemap com base no ID
@@ -17,45 +17,30 @@ GetTileMapDataFromID::
     ld d, 0                     ;   ┘
     ld hl, TileMaps             ;   move o ponteiro da tabela de tilemap pro reg HL
     add hl, de                  ;   adiciona o offset no ponteiro
-    ld a, [hl+]                 ;   ┐
-    ld e, a                     ;   │ copia o ponteiro do tilemap pro reg DE
-    ld a, [hl+]                 ;   │
-    ld d, a                     ;   ┘
-    inc hl                      ;   ┐ incrementa o ponteiro do tilemap 2 vezes
-    inc hl                      ;   ┘
-    ld a, [hl+]                 ;   ┐
-    ld c, a                     ;   │ copia o tamanho em bytes do tilemap no reg BC
-    ld a, [hl+]                 ;   │
-    ld b, a                     ;   ┘
-    ld hl, MapVRAMLoc           ;   copia o endereço da VRAM no reg HL
-    ret                         ;   retorna pra função anterior
 
-;   in:
-;       A = ID do Tile Map
-;   out:
-;       DE = Endereço dos dados de atributos do TileMap
-;       BC = Tamanho em bytes dos atributos do TileMap
-;       HL = Endereço da VRAM pertencente aos atributos do TileMap
-GetTileMapAttributeFromID::
-    sla a                       ;   ────┐ 4 Bit Shift Left Aritmetic, equivalente a multiplicar o acumulador por 16
-    sla a                       ;       ├ 
-    sla a                       ;       │ Offset da tabela de tilemap com base no ID
-    sla a                       ;   ────┘ ID 0 = Offset 0, ID 1 = Offset 16, etc
-    add a, 2                    ;   adiciona 2 no acumulador
-    ld e, a                     ;   ┐ move o offset pro reg DE
-    ld d, 0                     ;   ┘
-    ld hl, TileMaps             ;   move o ponteiro da tabela de tilemap pro reg HL
-    add hl, de                  ;   adiciona o offset no ponteiro
-    ld a, [hl+]                 ;   ┐
-    ld e, a                     ;   │ copia o ponteiro dos atributos do tilemap pro reg DE
-    ld a, [hl+]                 ;   │
-    ld d, a                     ;   ┘
-    ld a, [hl+]                 ;   ┐
-    ld c, a                     ;   │ copia o tamanho em bytes do tilemap no reg BC
-    ld a, [hl+]                 ;   │
-    ld b, a                     ;   ┘
-    ld hl, MapVRAMLoc           ;   copia o endereço da VRAM no reg HL
-    ret                         ;   retorna pra função anterior
+    ld de, MapData_P
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    ld a, [hl+]
+    ld [de], a
+
+    ld de, MapAttr_P
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    ld a, [hl+]
+    ld [de], a
+    
+    ld de, MapByteSize_D
+    ld a, [hl+]                 
+    ld [de], a                  
+    inc de    
+    ld a, [hl+]                 
+    ld [de], a                  
+
+    ret
+
 
 ;   in:
 ;       A = ID do Tile Map
@@ -92,27 +77,25 @@ GetStatusBarAttributes::
 ;   out:
 ;       A = Byte/Data em uma posição específica do 'array' de colisão
 GetColisionData::
-    ;sla a                       ;   ────┐ 4 Bit Shift Left Aritmetic, equivalente a multiplicar o acumulador por 16
-    ;sla a                       ;       ├              
-    ;sla a                       ;       │ Offset da tabela de tilemap com base no ID
-    ;sla a                       ;   ────┘ ID 0 = Offset 0, ID 1 = Offset 16, etc
-    ;add a, 7                    ;   Offset pro ponteiro com a tabela de colisao
-    ;ld c, a                     ;   ┐ move o offset pro reg BC
-    ;ld b, 0                     ;   ┘
-    ;ld hl, TileMaps             ;   move o ponteiro da tabela de tilemap pro reg HL
-    ;add hl, bc                  ;   adiciona o offset no ponteiro
-    ;ld a, [hl+]                 ;   ┐
-    ;ld c, a                     ;   │ move o ponteiro da tabela de colisao pro reg BC
-    ;ld a, [hl]                  ;   │
-    ;ld b, a                     ;   ┘
-    ;ld h, a                     ;   ┐
-    ;ld a, c                     ;   │ copia o ponteiro da tabela de colisao pro reg HL   
-    ;ld l, a                     ;   ┘      
-    ;add hl, de                  ;   incrementa o ponteiro com o offset no reg DE
-    ;ld a, [hl]                  ;   copia o byte/data de colisao pro acumulador
-    ;ret                         ;   retorna pra função anterior
-    ld a, 1
-    ret
+    sla a                       ;   ────┐ 4 Bit Shift Left Aritmetic, equivalente a multiplicar o acumulador por 16
+    sla a                       ;       ├              
+    sla a                       ;       │ Offset da tabela de tilemap com base no ID
+    sla a                       ;   ────┘ ID 0 = Offset 0, ID 1 = Offset 16, etc
+    add a, 7                    ;   Offset pro ponteiro com a tabela de colisao
+    ld c, a                     ;   ┐ move o offset pro reg BC
+    ld b, 0                     ;   ┘
+    ld hl, TileMaps             ;   move o ponteiro da tabela de tilemap pro reg HL
+    add hl, bc                  ;   adiciona o offset no ponteiro
+    ld a, [hl+]                 ;   ┐
+    ld c, a                     ;   │ move o ponteiro da tabela de colisao pro reg BC
+    ld a, [hl]                  ;   │
+    ld b, a                     ;   ┘
+    ld h, a                     ;   ┐
+    ld a, c                     ;   │ copia o ponteiro da tabela de colisao pro reg HL   
+    ld l, a                     ;   ┘      
+    add hl, de                  ;   incrementa o ponteiro com o offset no reg DE
+    ld a, [hl]                  ;   copia o byte/data de colisao pro acumulador
+    ret                         ;   retorna pra função anterior
 
 ;   in:
 ;       A = ID do Tile Map
@@ -177,6 +160,15 @@ GetMapWarpData::
     ld a, 255                   ;   move o valor pro acumulador
 .end:
     ret                         ;   retorna pra função anterior
+
+SECTION "Map WRAM", WRAM0
+MapData_P:: ds 2         ; (ponteiro) data do tilemap
+MapAttr_P:: ds 2         ; (ponteiro) atributos do tilemap
+MapByteSize_D:: ds 2     ; (data) tamanho em bytes do tilemap
+MapTileSetId_D: ds 1    ; (data) id do tileset usado pelo tilemap
+MapColision_P: ds 2     ; (ponteiro) colisao do tilemap
+MapWarps_P: ds 2        ; (ponteiro) tabela de warps do mapa
+MapUnused: ds 5         ; Possível uso futuro
 
 SECTION "Tile Map Data", ROMX
 TileMaps:                       ; 16 bytes per entry

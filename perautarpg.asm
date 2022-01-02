@@ -14,6 +14,9 @@ DEF PlayerSpriteOffsetL EQU 4       ;   Offset em bytes da sprite esquerda do jo
 DEF PlayerSpriteOffsetR EQU 8       ;   Offset em bytes da sprite direita do jogador
 DEF CursorSpriteOffset EQU 12       ;   Offset em bytes da sprite direita do jogador
 
+DEF StartMenuID EQU 0
+DEF PlayerInfoMenuID EQU 1
+
 SECTION "Header", ROM0[$100]
 	jp Start                        ;   pula/chama a função Start
 
@@ -72,12 +75,10 @@ init:
     call CopyTileSetPaletteData         ;   chama a função CopyTileSetPaletteData
 
     ld a, [ActiveMapId]                 ;   move o valor apontado pela label pro acumulador
-    call GetTileMapDataFromID           ;   chama a função GetTileSetFromID
-    call CopyMapData                    ;   chama a função CopyTiles
+    call GetMapData
+    call CopyMapData
     call SetCGBVRAMBank1                ;   chama a função SetCGBVRAMBank1
-    ld a, [ActiveMapId]                 ;   move o valor apontado pela label pro acumulador
-    call GetTileMapAttributeFromID      ;   chama a função GetTileSetFromID
-    call CopyMapData                    ;   chama a função CopyTiles
+    call CopyMapData
     call SetCGBVRAMBank0                ;   chama a função SetCGBVRAMBank1
 
     ; Start DEBUG Stuff
@@ -115,13 +116,20 @@ init:
 
     call UpdatePlayerSpritePosition     ;   chama a função UpdatePlayerSpritePosition
 
-    ld a, 222
+    ld a, 222 ;0xDE
     ld[Health], a
     ld[Mana], a
-    ld[Experience], a
     ld[Attack], a
     ld[Defense], a
     ld[Speed], a
+
+    ld a, $DE ; $DEDE = 57054
+    ld hl, Experience
+    ld [hl+], a
+    ld [hl], a
+    ld hl, Money
+    ld [hl+], a
+    ld [hl], a
 
 	ret                                 ;   retorna pra função anterior
 
@@ -365,12 +373,10 @@ MudarMapa:
     call CopyTileSetPaletteData         ;   chama a função CopyTileSetPaletteData
 
     ld a, [ActiveMapId]                 ;   move o valor apontado pela label pro acumulador
-    call GetTileMapDataFromID           ;   chama a função GetTileSetFromID
-    call CopyMapData                    ;   chama a função CopyTiles
+    call GetMapData
+    call CopyMapData
     call SetCGBVRAMBank1                ;   chama a função SetCGBVRAMBank1
-    ld a, [ActiveMapId]                 ;   move o valor apontado pela label pro acumulador
-    call GetTileMapAttributeFromID      ;   chama a função GetTileSetFromID
-    call CopyMapData                    ;   chama a função CopyTiles
+    call CopyMapData
     call SetCGBVRAMBank0                ;   chama a função SetCGBVRAMBank0
 
     call LigarLCD                       ;   chama a função LigarLCD
@@ -678,7 +684,41 @@ ChangeMapFromColision:
     ; Função pra copia o mapa da ROM pra VRAM
 CopyMapData:
     ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
-    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
+    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM
+
+    ld a, [rVBK]
+    and 1
+    cp 1
+    jp z, .prepareMapAttr
+
+    ld a, [rVBK]
+    and 0
+    cp 0
+    jp z, .prepareMapData
+
+    ret
+
+.prepareMapData:
+    ld hl, MapData_P    
+    ld e, [hl]
+    inc hl
+    ld d, [hl]
+    jp .finishSetup
+
+.prepareMapAttr:
+    ld hl, MapAttr_P    
+    ld e, [hl]
+    inc hl
+    ld d, [hl]
+    jp .finishSetup
+
+.finishSetup:
+    ld hl, MapByteSize_D
+    ld c, [hl]
+    inc hl
+    ld b, [hl]
+    ld hl, _SCRN0
+
 .loop:
 	ld a, [de]			                ;   copia tile pro acumulador
 	ld [hli], a			                ;   copia tile do acumulador pra VRAM apontado pelo registrador HL e incrementa HL
@@ -743,7 +783,7 @@ CopyStatusBarData:
 	ret					                ;   retorna para a função anterior
 
     ;Função pra copiar os menus/windows
-CopyMenuData:
+CopyWindowData:
     ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
     ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
 .loop:
@@ -763,12 +803,20 @@ CopyMenuData:
     ld [TempMapE], a                    ;   ┘
     ld a, [MapLineCount]                ;   copia o contador de linha pro acumulador
     add 1                               ;   incrementa o contador
-    cp a, 8                             ;   compara o contador
+    push hl
+    ld hl, TempWindowWidth
+    cp a, [hl]                          ;   compara o contador
+    pop hl
     jp nz, .continue                    ;   pula pra função .continue caso a flag Z (zero) nao estiver setado
     ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
     ld [MapLineCount], a                ;   copia o valor no acumulador na WRAM
-    ld d, 0                             ;   ┐ copia o valor em bytes para incrementar o ponteiro da VRAM no reg DE
-    ld e, 24                            ;   ┘
+    ;ld d, 0                             ;   ┐ copia o valor em bytes para incrementar o ponteiro da VRAM no reg DE
+    ;ld e, 24                            ;   ┘
+    push af
+    ld d, 0
+    ld a, [TempWindowVRAMLineOffset]
+    ld e, a
+    pop af
     add hl, de                          ;   incrementa a posição do ponteiro da VRAM em DE bytes
 .continue:
     ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
@@ -797,8 +845,10 @@ ToggleStartMenu:
     call WindowFunctions.RenderStartMenu    ;   Renderiza o Start Menu
     ld a, 1                                 ;   ┐ Seta o índice do cursor do Start Menu
     ld [MenuEntry], a                       ;   ┘
-    ld a, 0                                 ;   ┐ Move o Menu pra tela
-    ld [rWY], a                             ;   ┘
+    ld a, 0                                 ;   ┐ 
+    ld [rWY], a                             ;   │ Move o Menu pra tela
+    ld a, 103                               ;   │
+    ld [rWX], a                             ;   ┘
     jp .initCursor                          ;   Pula pra função que 'inicia' o cursor
 
 .hideStartMenu:
@@ -864,13 +914,49 @@ WindowFunctions:
 .RenderStartMenu:
     call WaitVBlank                     ;   Loop de espera do VBlank
     call DesligarLCD                    ;   Desliga a tela
+    
+    ld a, StartMenuID
+    call GetWindowWitdhFromID
+    ld a, b
+    ld [TempWindowWidth], a
+    ld a, c
+    ld [TempWindowVRAMLineOffset], a
 
-    call GetMenuData                    ;   chama a função GetMenuData
-    call CopyMenuData                   ;   chama a função CopyMenuData
+    ld a, StartMenuID
+    call GetWindowDataFromID            ;   chama a função GetMenuData
+    call CopyWindowData                 ;   chama a função CopyWindowData
     call SetCGBVRAMBank1                ;   chama a função SetCGBVRAMBank1
-    call GetMenuAttributes              ;   chama a função GetMenuAttributes
-    call CopyMenuData                   ;   chama a função CopyMenuData
+
+    ld a, StartMenuID
+    call GetWindowAttributesFromID      ;   chama a função GetMenuAttributes
+    call CopyWindowData                 ;   chama a função CopyWindowData
     call SetCGBVRAMBank0                ;   chama a função SetCGBVRAMBank0
+
+    call LigarLCD                       ;   Liga a tela
+    ret
+
+.RenderPlayerInfoMenu:
+    call WaitVBlank                     ;   Loop de espera do VBlank
+    call DesligarLCD                    ;   Desliga a tela
+    
+    ld a, PlayerInfoMenuID
+    call GetWindowWitdhFromID
+    ld a, b
+    ld [TempWindowWidth], a
+    ld a, c
+    ld [TempWindowVRAMLineOffset], a
+
+    ld a, PlayerInfoMenuID
+    call GetWindowDataFromID            ;   chama a função GetPlayerInfoData
+    call CopyWindowData                 ;   chama a função CopyPlayerInfoData
+    call SetCGBVRAMBank1                ;   chama a função SetCGBVRAMBank1
+
+    ld a, PlayerInfoMenuID
+    call GetWindowAttributesFromID      ;   chama a função GetPlayerInfoAttributes
+    call CopyWindowData                 ;   chama a função CopyPlayerInfoData
+    call SetCGBVRAMBank0                ;   chama a função SetCGBVRAMBank0
+    
+    ;call RenderPlayerStats
 
     call LigarLCD                       ;   Liga a tela
     ret
@@ -916,6 +1002,8 @@ MoverCursor:
 
 .Acao:
     ld a, [MenuEntry]                   ;   Copia o indice do menu no acumulador
+    cp 1
+    jp z, .showPlayerInfo
     cp 5                                ;   Compara se o índice é igual a 5 (Z)
     jp z, .hideMenu                     ;   Pula pra função de esconder o menu se sim (Z)
     ret
@@ -925,6 +1013,68 @@ MoverCursor:
     pop hl                              ;   remove o ponteiro da função ToggleStartMenu.menuKeyreadLoop
                                         ;   da stack, previne que fique em loop como se estivesse no StartMenu
     ret
+
+.showPlayerInfo:
+    call TogglePlayerInfoMenu           ;   
+    pop hl                              ;   remove o ponteiro da função TogglePlayerInfoMenu.
+                                        ;   da stack, previne que fique em loop como se estivesse no StartMenu
+    ret
+
+TogglePlayerInfoMenu:
+    call WindowFunctions.RenderPlayerInfoMenu
+    ld a, 0                                 ;   ┐ 
+    ld [rWY], a                             ;   │ Move o Menu pra tela
+    ld a, 7                                 ;   │
+    ld [rWX], a                             ;   ┘
+    ret
+
+    ;Experience 9CA3-9CA7 ;5
+    ;Health     9D03-9D05 ;3
+    ;Mana       9D0E-9D10 ;3
+    ;Attack     9D63-9D65 ;3
+    ;Defense    9D6E-9D70 ;3
+    ;Speed      9DC3-9DC5 ;3
+    ;Money      9DCC-9DD0 ;5
+    ;Tile Base 0x90
+RenderPlayerStats:
+    ld hl, Experience
+    ld a, [hl+]
+    ld d, $27
+    ld a, [hl]
+    ld e, $10
+    
+    call ConvertNumberToTile
+    ret
+
+ConvertNumberToTile:
+    ld b, 0
+    ld hl, 0
+    add hl, de
+    ld a, h
+    cp $27
+    jp c, .salvarDezenaMilhar
+    ld a, l
+    cp $10
+    jp c, .salvarDezenaMilhar
+.processarDezenaMilhar:
+    inc b
+    ld a, h
+    sub $27
+    ld h, a
+    ld a, l
+    sub $10
+    ld l, a
+    ld a, h
+    cp $27
+    jp nz, .processarDezenaMilhar
+    ld a, l
+    cp $10
+    jp nc, .processarDezenaMilhar
+.salvarDezenaMilhar:
+    ;ld [hl+], b
+    halt
+    ret
+
 
 SECTION "OAM DMA", HRAM
 hOAMDMA: ds 8                           ;   Espaço na HRAM para alocar a função de cópia de bytes pra OAM
@@ -942,15 +1092,19 @@ TempMapD: ds 1                          ;   Armazenamento temporario do reg D
 TempMapE: ds 1                          ;   Armazenamento temporario do reg E
 MapLineCount: ds 1                      ;   Armazenamento do contador de linha do CopyMapData
 MenuEntry: ds 1                         ;   Índice do Menu
+TempWindowWidth: ds 1                   ;   Largura da WindowLayer
+TempWindowVRAMLineOffset: ds 1
 
 SECTION "Player", WRAM0
 Health: ds 1                            ;   ┐
 Mana: ds 1                              ;   │
-Experience: ds 1                        ;   │
+Experience: ds 2                        ;   │
 Attack: ds 1                            ;   │ Player Status
 Defense: ds 1                           ;   │
 Speed: ds 1                             ;   │
+Money: ds 2                             ;   |
 ;Inventory                              ;   ┘
+RenderStatsBuffer: ds 25
 
 SECTION "Variaveis_OAM", WRAM0[$C100]
 SpritesDataRAM: ds 12                   ;   Data das sprites para copiar a OAM
