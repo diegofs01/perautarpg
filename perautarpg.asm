@@ -36,6 +36,7 @@ SECTION "RAM Size", ROM0[$149]
 	db CART_SRAM_NONE               ;   tamanho da RAM do cartucho
 
 SECTION "Main", ROM0[$150]
+NomeHardCoded: DB "PERALTA   RGBDS"    ; temporario, max 15 caracteres
 Start:
 	    ; Shut down audio circuitry
 	ld a, 0			                    ;   move valor 0 pro acumulador
@@ -116,19 +117,40 @@ init:
 
     call UpdatePlayerSpritePosition     ;   chama a função UpdatePlayerSpritePosition
 
-    ld a, 222 ;0xDE
+    ld bc, NomeHardCoded
+    ld de, Name
+    ld h, 15
+.loop:
+    ld a, [bc]
+    add 96
+    ld [de], a
+    inc bc
+    inc de
+    dec h
+    ld a, h
+    cp 0
+    jp nz, .loop
+
+    ;ld a, 122 ;0xDE
+    ld a, 171 ; $AB
     ld[Health], a
     ld[Mana], a
     ld[Attack], a
     ld[Defense], a
     ld[Speed], a
 
-    ld a, $DE ; $DEDE = 57054
+    ;ld a, $DE ; $DEDE = 57054
+                ; $D42B = 54315
+    ld a, $D4
     ld hl, Experience
     ld [hl+], a
+    ld a, $2B
     ld [hl], a
+
     ld hl, Money
+    ld a, $D4
     ld [hl+], a
+    ld a, $2B
     ld [hl], a
 
 	ret                                 ;   retorna pra função anterior
@@ -956,9 +978,10 @@ WindowFunctions:
     call CopyWindowData                 ;   chama a função CopyPlayerInfoData
     call SetCGBVRAMBank0                ;   chama a função SetCGBVRAMBank0
     
-    ;call RenderPlayerStats
+    call RenderPlayerStats
 
     call LigarLCD                       ;   Liga a tela
+    
     ret
 
 MoverCursor:
@@ -1026,8 +1049,25 @@ TogglePlayerInfoMenu:
     ld [rWY], a                             ;   │ Move o Menu pra tela
     ld a, 7                                 ;   │
     ld [rWX], a                             ;   ┘
+
+    ld a, [rLCDC]
+    res 1, a
+    ld [rLCDC], a
+
+.waitButtonPress:
+    call ArtificialDelay
+    call JoypadRead
+    ld b, KEY_START | KEY_B | KEY_A 
+
+    ld a, [KeyRead]
+    and b
+    jp z, .waitButtonPress
+
+    call ToggleStartMenu
+
     ret
 
+    ;Name       9C41-9C4F ;15
     ;Experience 9CA3-9CA7 ;5
     ;Health     9D03-9D05 ;3
     ;Mana       9D0E-9D10 ;3
@@ -1037,42 +1077,218 @@ TogglePlayerInfoMenu:
     ;Money      9DCC-9DD0 ;5
     ;Tile Base 0x90
 RenderPlayerStats:
+    call RenderPlayerName
+
     ld hl, Experience
     ld a, [hl+]
-    ld d, $27
+    ld d, a
     ld a, [hl]
-    ld e, $10
-    
-    call ConvertNumberToTile
+    ld e, a
+    ld hl, $9CA3
+    push hl
+    ld hl, TempTiles
+    call RenderStats
+
+    ld hl, Health
+    ld d, 0
+    ld a, [hl]
+    ld e, a
+    ld hl, $9D03
+    push hl
+    ld hl, TempTiles
+    call RenderStats
+
+    ld hl, Mana
+    ld d, 0
+    ld a, [hl]
+    ld e, a
+    ld hl, $9D0E
+    push hl
+    ld hl, TempTiles
+    call RenderStats
+
+    ld hl, Attack
+    ld d, 0
+    ld a, [hl]
+    ld e, a
+    ld hl, $9D63
+    push hl
+    ld hl, TempTiles
+    call RenderStats
+
+    ld hl, Defense
+    ld d, 0
+    ld a, [hl]
+    ld e, a
+    ld hl, $9D6E
+    push hl
+    ld hl, TempTiles
+    call RenderStats
+
+    ld hl, Speed
+    ld d, 0
+    ld a, [hl]
+    ld e, a
+    ld hl, $9DC3
+    push hl
+    ld hl, TempTiles
+    call RenderStats
+
+    ld hl, Money
+    ld a, [hl+]
+    ld d, a
+    ld a, [hl]
+    ld e, a
+    ld hl, $9DCC
+    push hl
+    ld hl, TempTiles
+    call RenderStats
+
     ret
 
-ConvertNumberToTile:
+RenderPlayerName:
+    ld hl, $9C41
+    ld de, Name
+    ld bc, 15
+    call CopyTiles
+    ret
+
+RenderStats:
+    ld c, 3
+
+    ld a, 0
+    cp d
+    jp z, .startCentena
+
+.startDezenaMilhar:
+    ld c, 5
     ld b, 0
-    ld hl, 0
-    add hl, de
-    ld a, h
-    cp $27
-    jp c, .salvarDezenaMilhar
-    ld a, l
-    cp $10
-    jp c, .salvarDezenaMilhar
-.processarDezenaMilhar:
-    inc b
-    ld a, h
-    sub $27
-    ld h, a
-    ld a, l
-    sub $10
-    ld l, a
-    ld a, h
-    cp $27
-    jp nz, .processarDezenaMilhar
-    ld a, l
-    cp $10
-    jp nc, .processarDezenaMilhar
-.salvarDezenaMilhar:
-    ;ld [hl+], b
+
+    ; 9999 0x270F - D = 0x27, E = 0x0F
+    ;10000 0x2710 - D = 0x27, E = 0x10
+    ;10001 0x2711 - D = 0x27, E = 0x11
+    ;<valida se o numero é maior ou igual a 10000>
+.checkDezenaMilharD:
+    ld a, $27
+    cp d
+    jp z, .checkDezenaMilharE   ;   d = a
+    jp c, .subtractDezenaMilhar  ;   d > a
+    jp nc, .endDezenaMilhar     ;   d < a
     halt
+.checkDezenaMilharE     
+    ld a, $10
+    cp e
+    jp c, .subtractDezenaMilhar     ;   e > a
+    jp z, .subtractDezenaMilhar     ;   e = a
+    jp nc, .endDezenaMilhar     ;   e < a
+    ;</valida se o numero é maior ou igual a 10000>
+.subtractDezenaMilhar:
+    inc b
+    ld a, e
+    sub $10
+    ld e, a
+    ld a, d
+    sbc $27
+    ld d, a
+    jp .checkDezenaMilharD
+.endDezenaMilhar:
+    ld a, 0
+    add b
+    add 144
+    ld [hl+], a
+.startMilhar:
+    ld b, 0
+    ;<valida se o numero é maior ou igual a 1000 e menor que 10000>
+.checkMilharD:
+    ld a, $03
+    cp d
+    jp z, .checkMilharE     ;   d = a
+    jp c, .subtractMilhar       ;   d > a
+    jp nc, .endMilhar       ;   d < a
+.checkMilharE     
+    ld a, $e8
+    cp e
+    jp c, .subtractMilhar       ;   e > a
+    jp z, .subtractMilhar       ;   e = a
+    jp nc, .endMilhar       ;   e < a
+    ;</valida se o numero é maior ou igual a 1000 e menor que 10000>
+.subtractMilhar:
+    inc b
+    ld a, e
+    sub $e8
+    ld e, a
+    ld a, d
+    sbc $03
+    ld d, a
+    jp .checkMilharD
+.endMilhar:
+    ld a, 0
+    add b
+    add 144
+    ld [hl+], a
+.startCentena:
+    ld b, 0
+    ;<valida se o numero é maior ou igual a 1000 e menor que 10000>
+.checkCentenaD:
+    ld a, $00
+    cp d
+    jp z, .checkCentenaE   ;   d = a
+    jp c, .subtractCentena  ;   d > a
+    jp nc, .endCentena     ;   d < a
+.checkCentenaE     
+    ld a, $64
+    cp e
+    jp c, .subtractCentena  ;   e > a
+    jp z, .subtractCentena  ;   e = a
+    jp nc, .endCentena     ;   e < a
+    ;</valida se o numero é maior ou igual a 1000 e menor que 10000>
+.subtractCentena:
+    inc b
+    ld a, e
+    sub 100
+    ld e, a
+    ld a, d
+    sbc 0
+    ld d, a
+    jp .checkCentenaD
+.endCentena:
+    ld a, 0
+    add b
+    add 144
+    ld [hl+], a
+.startDezena:
+    ld b, 0
+.checkDezenaE     
+    ld a, $A
+    cp e
+    jp c, .subtractDezena  ;   e > a
+    jp z, .subtractDezena  ;   e = a
+    jp nc, .endDezena     ;   e < a
+    ;</valida se o numero é maior ou igual a 1000 e menor que 10000>
+.subtractDezena:
+    inc b
+    ld a, e
+    sub 10
+    ld e, a
+    jp .checkDezenaE
+.endDezena:
+    ld a, 0
+    add b
+    add 144
+    ld [hl+], a
+.unidade:
+    ld a, 0
+    add e
+    add 144
+    ld [hl], a
+renderStat:
+    pop de
+    pop hl
+    push de
+    ld de, TempTiles
+    ld b, 0
+    call CopyTiles
+.end:
     ret
 
 
@@ -1094,8 +1310,10 @@ MapLineCount: ds 1                      ;   Armazenamento do contador de linha d
 MenuEntry: ds 1                         ;   Índice do Menu
 TempWindowWidth: ds 1                   ;   Largura da WindowLayer
 TempWindowVRAMLineOffset: ds 1
+TempTiles: ds 15
 
 SECTION "Player", WRAM0
+Name: ds 15
 Health: ds 1                            ;   ┐
 Mana: ds 1                              ;   │
 Experience: ds 2                        ;   │
