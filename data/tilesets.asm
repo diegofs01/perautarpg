@@ -83,23 +83,34 @@ TileSets:                               ; 8 bytes per entry
     dw Exterior02_PaletteData    
     db Exterior02_PaletteDataSize
     db 0   
+    ;id 3
+    dw Lab01_Data           
+    dw Lab01_DataSize       
+    dw Lab01_PaletteData    
+    db Lab01_PaletteDataSize
+    db 0   
 
 Exterior01_Data:            INCBIN "data/tilesets/exterior01.chr"
-Exterior01_DataSize         EQU 1024
+Exterior01_DataSize         EQU 2048
 Exterior01_PaletteData:     INCBIN "data/tilesets/exterior01.pal"
-Exterior01_PaletteDataSize  EQU 24
+Exterior01_PaletteDataSize  EQU 32
 
 Exterior02_Data:            INCBIN "data/tilesets/exterior02.chr"
 Exterior02_DataSize         EQU 1024
 Exterior02_PaletteData:     INCBIN "data/tilesets/exterior02.pal"
-Exterior02_PaletteDataSize  EQU 24
+Exterior02_PaletteDataSize  EQU 32
 
 House01_Data:               INCBIN "data/tilesets/interior01.chr"
 House01_DataSize            EQU 1024
 House01_PaletteData:        INCBIN "data/tilesets/interior01.pal"
 House01_PaletteDataSize     EQU 48
 
-TextFont_Data:               INCBIN "data/tilesets/textfont.chr"
-TextFont_DataSize            EQU 2048
-TextFont_PaletteData:        INCBIN "data/tilesets/textfont.pal"
-TextFont_PaletteDataSize     EQU 8
+Lab01_Data:                 INCBIN "data/tilesets/lab01.chr"
+Lab01_DataSize              EQU 2048
+Lab01_PaletteData:          INCBIN "data/tilesets/lab01.pal"
+Lab01_PaletteDataSize       EQU 16
+
+TextFont_Data:              INCBIN "data/tilesets/textfont.chr"
+TextFont_DataSize           EQU 2048
+TextFont_PaletteData:       INCBIN "data/tilesets/textfont.pal"
+TextFont_PaletteDataSize    EQU 8

@@ -37,7 +37,33 @@ GetMapData::
     ld [de], a                  
     inc de    
     ld a, [hl+]                 
-    ld [de], a                  
+    ld [de], a
+
+    ld de, MapTileSetId_D
+    ld a, [hl+]
+    ld [de], a
+
+    ld de, MapColision_P
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    ld a, [hl+]
+    ld [de], a
+
+    ld de, MapWarps_P
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    ld a, [hl+]
+    ld [de], a
+
+    ld de, MapWidth_D
+    ld a, [hl+]
+    ld [de], a
+
+    ld de, MapHeigth_D
+    ld a, [hl+]
+    ld [de], a
 
     ret
 
@@ -162,36 +188,40 @@ GetMapWarpData::
     ret                         ;   retorna pra função anterior
 
 SECTION "Map WRAM", WRAM0
-MapData_P:: ds 2         ; (ponteiro) data do tilemap
-MapAttr_P:: ds 2         ; (ponteiro) atributos do tilemap
-MapByteSize_D:: ds 2     ; (data) tamanho em bytes do tilemap
-MapTileSetId_D: ds 1    ; (data) id do tileset usado pelo tilemap
-MapColision_P: ds 2     ; (ponteiro) colisao do tilemap
-MapWarps_P: ds 2        ; (ponteiro) tabela de warps do mapa
-MapUnused: ds 5         ; Possível uso futuro
+MapData_P:: ds 2        ; (ponteiro) data do tilemap
+MapAttr_P:: ds 2        ; (ponteiro) atributos do tilemap
+MapByteSize_D:: ds 2    ; (data) tamanho em bytes do tilemap
+MapTileSetId_D:: ds 1    ; (data) id do tileset usado pelo tilemap
+MapColision_P:: ds 2     ; (ponteiro) colisao do tilemap
+MapWarps_P:: ds 2        ; (ponteiro) tabela de warps do mapa
+MapWidth_D:: ds 1        ; (data) largura (X) do mapa
+MapHeigth_D:: ds 1       ; (data) altura (Y) do mapa
+MapUnused: ds 3         ; Possível uso futuro
 
 SECTION "Tile Map Data", ROMX
 TileMaps:                       ; 16 bytes per entry
     ;ID 0
-    dw Map01_Tiles                ; 2 bytes   -   data do tilemap
-    dw Map01_Attributes           ; 2 bytes   -   atributos do tilemap
-    dw Map01_BytesLength          ; 2 bytes   -   tamanho em bytes do tilemap
-    db Map01_TileSetId            ; 1 byte    -   id do tileset usado pelo tilemap
-    dw Map01_Colision             ; 2 bytes   -   colisao do tilemap
-    dw Map01_Warps                ; 2 bytes   -   tabela de warps do mapa
-    dw                            ; 2 bytes   -   zeros
-    db                            ; 1 byte    -   zeros   ────┐ Possível uso futuro
-    dw                            ; 2 bytes   -   zeros   ────┘
+    dw Map01_Tiles                  ; 2 bytes   -   data do tilemap
+    dw Map01_Attributes             ; 2 bytes   -   atributos do tilemap
+    dw Map01_BytesLength            ; 2 bytes   -   tamanho em bytes do tilemap
+    db Map01_TileSetId              ; 1 byte    -   id do tileset usado pelo tilemap
+    dw Map01_Colision               ; 2 bytes   -   colisao do tilemap
+    dw Map01_Warps                  ; 2 bytes   -   tabela de warps do mapa
+    db Map01_Width                  ; 1 byte    -   largura / X
+    db Map01_Heigth                 ; 1 byte    -   altura  / Y
+    db                              ; 1 byte    -   zeros   ────┐ Possível uso futuro
+    dw                              ; 2 bytes   -   zeros   ────┘
     ; ID 1
-    dw House01_Tiles              ; 2 bytes   -   data do tilemap
-    dw House01_Attributes         ; 2 bytes   -   atributos do tilemap
-    dw House01_BytesLength        ; 2 bytes   -   tamanho em bytes do tilemap
-    db House01_TileSetId          ; 1 byte    -   id do tileset usado pelo tilemap
-    dw House01_Colision           ; 2 bytes   -   colisao do tilemap
-    dw House01_Warps              ; 2 bytes   -   tabela de warps do mapa
-    dw                            ; 2 bytes   -   zeros
-    db                            ; 1 byte    -   zeros   ────┐ Possível uso futuro
-    dw                            ; 2 bytes   -   zeros   ────┘
+    dw House01_Tiles                ; 2 bytes   -   data do tilemap
+    dw House01_Attributes           ; 2 bytes   -   atributos do tilemap
+    dw House01_BytesLength          ; 2 bytes   -   tamanho em bytes do tilemap
+    db House01_TileSetId            ; 1 byte    -   id do tileset usado pelo tilemap
+    dw House01_Colision             ; 2 bytes   -   colisao do tilemap
+    dw House01_Warps                ; 2 bytes   -   tabela de warps do mapa
+    db House01_Width                ; 1 byte    -   largura / X
+    db House01_Heigth               ; 1 byte    -   altura  / Y
+    db                              ; 1 byte    -   zeros   ────┐ Possível uso futuro
+    dw                              ; 2 bytes   -   zeros   ────┘
     ; ID 2
     dw House02_Tiles                
     dw House02_Attributes           
@@ -199,7 +229,8 @@ TileMaps:                       ; 16 bytes per entry
     db House02_TileSetId            
     dw House02_Colision             
     dw House02_Warps                
-    dw
+    db House02_Width
+    db House02_Heigth
     db
     dw
     ;ID 3
@@ -209,7 +240,19 @@ TileMaps:                       ; 16 bytes per entry
     db Map02_TileSetId  
     dw Map02_Colision   
     dw Map02_Warps      
+    db Map02_Width
+    db Map02_Heigth 
+    db 
     dw 
+    ;ID 4
+    dw Lab01_Tiles      
+    dw Lab01_Attributes 
+    dw Lab01_BytesLength
+    db Lab01_TileSetId  
+    dw Lab01_Colision   
+    dw Lab01_Warps      
+    db Lab01_Width
+    db Lab01_Heigth 
     db 
     dw 
 
@@ -217,6 +260,8 @@ Map01_Tiles:        INCBIN "data/maps/map01.tilemap"
 Map01_Attributes:   INCBIN "data/maps/map01.attrmap"
 Map01_BytesLength   EQU 320
 Map01_TileSetId     EQU 0  
+Map01_Width         EQU 20
+Map01_Heigth        EQU 16
 Map01_Colision:
     DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -240,12 +285,16 @@ Map01_Warps:
     DB      96,      40,           40,          112,         2,
     DB     144,      72,            0,           72,         3,
     DB     144,      80,            0,           80,         3,
+    DB       0,      72,          128,          184,         4,
+    DB       0,      80,          128,          184,         4,
     DB     255,     255
 
 House01_Tiles:        INCBIN "data/maps/house01.tilemap"
 House01_Attributes:   INCBIN "data/maps/house01.attrmap"
 House01_BytesLength   EQU 320
 House01_TileSetId     EQU 1
+House01_Width         EQU 20
+House01_Heigth        EQU 16
 House01_Colision:
 	DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -272,6 +321,8 @@ House02_Tiles:        INCBIN "data/maps/house02.tilemap"
 House02_Attributes:   INCBIN "data/maps/house02.attrmap"
 House02_BytesLength   EQU 320
 House02_TileSetId     EQU 1
+House02_Width         EQU 20
+House02_Heigth        EQU 16
 House02_Colision:
 	DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -298,6 +349,8 @@ Map02_Tiles:        INCBIN "data/maps/map02.tilemap"
 Map02_Attributes:   INCBIN "data/maps/map02.attrmap"
 Map02_BytesLength   EQU 320
 Map02_TileSetId     EQU 2
+Map02_Width         EQU 20
+Map02_Heigth        EQU 16
 Map02_Colision:
     DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
     DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
@@ -336,6 +389,40 @@ Map02_Warps:
     DB       0,      72,          144,           72,         0,
     DB       0,      80,          144,           80,         0,
     DB     255,     255
+
+Lab01_Tiles:        INCBIN "data/maps/lab01.tilemap"
+Lab01_Attributes:   INCBIN "data/maps/lab01.attrmap"
+Lab01_BytesLength   EQU 768
+Lab01_TileSetId     EQU 3
+Lab01_Width         EQU 32
+Lab01_Heigth        EQU 24
+Lab01_Colision: 
+    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+Lab01_Warps:
+    DB 128, 184, 0, 72, 0
 
 StatusBar_Tiles:        INCBIN "data/maps/statusbar.tilemap"
 StatusBar_Attributes:   INCBIN "data/maps/statusbar.attrmap"

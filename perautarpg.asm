@@ -117,41 +117,40 @@ init:
 
     call UpdatePlayerSpritePosition     ;   chama a função UpdatePlayerSpritePosition
 
-    ld bc, NomeHardCoded
-    ld de, Name
-    ld h, 15
-.loop:
-    ld a, [bc]
-    add 96
-    ld [de], a
-    inc bc
-    inc de
-    dec h
-    ld a, h
-    cp 0
-    jp nz, .loop
+    ld bc, NomeHardCoded                ;   ┐
+    ld de, Name                         ;   │
+    ld h, 15                            ;   │
+.loop:                                  ;   │
+    ld a, [bc]                          ;   │
+    add 96                              ;   │
+    ld [de], a                          ;   │   Copia o nome inicial do jogador 
+    inc bc                              ;   │
+    inc de                              ;   │
+    dec h                               ;   │
+    ld a, h                             ;   │
+    cp 0                                ;   │
+    jp nz, .loop                        ;   ┘
 
-    ;ld a, 122 ;0xDE
-    ld a, 171 ; $AB
-    ld[Health], a
-    ld[Mana], a
-    ld[Attack], a
-    ld[Defense], a
-    ld[Speed], a
+    ld a, 234 ; $EA
+    ld[Health], a                       ;   ┐   Copia a Vida Inicial
+    ld[Mana], a                         ;   │   Copia a Mana Inicial
+    ld[Attack], a                       ;   │   Copia o Ataque Inicial
+    ld[Defense], a                      ;   │   Copia a Defesa Inicial
+    ld[Speed], a                        ;   ┘   Copia a Velocidade Inicial
 
-    ;ld a, $DE ; $DEDE = 57054
-                ; $D42B = 54315
-    ld a, $D4
-    ld hl, Experience
-    ld [hl+], a
-    ld a, $2B
-    ld [hl], a
+    ; $FF98 = 65432
+    ld hl, Experience                   ;   ┐
+    ld a, $FF                           ;   │
+    ld [hl+], a                         ;   │   Copia a Experiencia Inicial
+    ld a, $98                           ;   │
+    ld [hl], a                          ;   ┘
 
-    ld hl, Money
-    ld a, $D4
-    ld [hl+], a
-    ld a, $2B
-    ld [hl], a
+    ; $2AEB = 10987
+    ld hl, Money                        ;   ┐
+    ld a, $2A                           ;   │
+    ld [hl+], a                         ;   │   Copia o Dinheiro Inicial
+    ld a, $EB                           ;   │
+    ld [hl], a                          ;   ┘
 
 	ret                                 ;   retorna pra função anterior
 
@@ -705,62 +704,66 @@ ChangeMapFromColision:
 
     ; Função pra copia o mapa da ROM pra VRAM
 CopyMapData:
-    ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
-    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM
+    ld a, 0                             ;   ┐ armazena o valor inicial do contador de coluna no acumulador na WRAM
+    ld [MapColumnCount], a              ;   ┘
 
-    ld a, [rVBK]
-    and 1
-    cp 1
-    jp z, .prepareMapAttr
-
-    ld a, [rVBK]
-    and 0
-    cp 0
-    jp z, .prepareMapData
-
-    ret
+    ld a, [rVBK]                        ;   copia o valor do registrador de banco da VRAM pro acumulador
+    bit 0, a                            ;   verifica o bit 0 do acumulador e seta a flag de acordo (Z = 0, NZ <> 0)
+    jp nz, .prepareMapAttr              ;   pula pra função .prepareMapAttr se a flag Zero nao estiver setada (jp @ NZ)
 
 .prepareMapData:
-    ld hl, MapData_P    
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
-    jp .finishSetup
+    ld hl, MapData_P                    ;   ┐
+    ld e, [hl]                          ;   │ armazena o ponteiro dos tiles no reg DE
+    inc hl                              ;   │
+    ld d, [hl]                          ;   ┘
+    jp .finishSetup                     ;   pula pra função .finishSetup
 
 .prepareMapAttr:
-    ld hl, MapAttr_P    
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
-    jp .finishSetup
+    ld hl, MapAttr_P                    ;   ┐
+    ld e, [hl]                          ;   │ armazena o ponteiro dos atributos dos tiles no reg DE
+    inc hl                              ;   │
+    ld d, [hl]                          ;   ┘
+    jp .finishSetup                     ;   pula pra função .finishSetup
 
 .finishSetup:
-    ld hl, MapByteSize_D
-    ld c, [hl]
-    inc hl
-    ld b, [hl]
-    ld hl, _SCRN0
+    ld hl, MapByteSize_D                ;   ┐
+    ld c, [hl]                          ;   │ armazena o tamanho do mapa no reg BC
+    inc hl                              ;   │
+    ld b, [hl]                          ;   ┘
+    ld hl, _SCRN0                       ;   copia o ponteiro da VRAM do mapa no reg HL
 
 .loop:
-	ld a, [de]			                ;   copia tile pro acumulador
-	ld [hli], a			                ;   copia tile do acumulador pra VRAM apontado pelo registrador HL e incrementa HL
+	ld a, [de]			                ;   ┐ copia o tile/attr pra VRAM
+	ld [hli], a			                ;   ┘
 	inc de				                ;   incremtenta o ponteiro com os tiles
 	dec bc				                ;   decrementa a quantidade de tiles a ser copiado 
     ld a, d                             ;   ┐
     ld [TempMapD], a                    ;   │ armazena o ponteiro dos tiles na WRAM
     ld a, e                             ;   │
     ld [TempMapE], a                    ;   ┘
-    ld a, [MapLineCount]                ;   copia o contador de linha pro acumulador
-    add 1                               ;   incrementa o contador
-    cp a, 20                            ;   compara o contador
-    jp nz, .continue                    ;   pula pra função .continue caso a flag Z (zero) nao estiver setado
-    ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
-    ld [MapLineCount], a                ;   copia o valor no acumulador na WRAM
-    ld d, 0                             ;   ┐ copia o valor em bytes para incrementar o ponteiro da VRAM no reg DE
-    ld e, 12                            ;   ┘
+    push de                             ;   armazena o ponteiro dos tiles na Stack
+    ld d, 0                             ;   ┐
+    ld a, [MapWidth_D]                  ;   │ copia a largura do mapa no reg DE
+    ld e, a                             ;   ┘
+    ld a, [MapColumnCount]              ;   ┐
+    inc a                               ;   │ incrementa o contador de coluna
+    ld [MapColumnCount], a              ;   ┘ 
+    cp a, e                             ;   compara o contador de linha com a largura do mapa
+    pop de                              ;   recupera o ponteiro dos tiles na Stack
+    jp nz, .continue                    ;   pula pra função .continue caso o contador de coluna for menor que a largura do mapa
+
+    ld a, 0                             ;   ┐ copia o valor pro contador de coluna na WRAM
+    ld [MapColumnCount], a              ;   ┘
+    ld d, 0                             ;   ┐
+    ld a, [MapWidth_D]                  ;   │ copia a largura do mapa no reg DE
+    ld e, a                             ;   ┘
+    ld a, 32                            ;   copia o largura maxima na VRAM
+    sub e                               ;   subtrai a largura do mapa
+    ld e, a                             ;   copia o resultado no reg E
     add hl, de                          ;   incrementa a posição do ponteiro da VRAM em DE bytes
+    ld a, 0                             ;   ┐ armazena o valor inicial do contador de coluna no acumulador
+    ld [MapColumnCount], a              ;   ┘
 .continue:
-    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
     ld a, [TempMapD]                    ;   ┐
     ld d, a                             ;   │ recupera o ponteiro dos tiles
     ld a, [TempMapE]                    ;   │
@@ -773,7 +776,7 @@ CopyMapData:
     ;Barra de status na parte de baixo da tela
 CopyStatusBarData:
     ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
-    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
+    ld [MapColumnCount], a              ;   armazena o contador de coluna na WRAM 
 .loop:
 	ld a, [de]			                ;   copia tile pro acumulador
     add 128
@@ -784,17 +787,17 @@ CopyStatusBarData:
     ld [TempMapD], a                    ;   │ armazena o ponteiro dos tiles na WRAM
     ld a, e                             ;   │
     ld [TempMapE], a                    ;   ┘
-    ld a, [MapLineCount]                ;   copia o contador de linha pro acumulador
-    add 1                               ;   incrementa o contador
+    ld a, [MapColumnCount]              ;   ┐
+    inc a                               ;   │ incrementa o contador de coluna
+    ld [MapColumnCount], a              ;   ┘ 
     cp a, 20                            ;   compara o contador
     jp nz, .continue                    ;   pula pra função .continue caso a flag Z (zero) nao estiver setado
-    ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
-    ld [MapLineCount], a                ;   copia o valor no acumulador na WRAM
+    ld a, 0                             ;   ┐ armazena o valor inicial do contador de coluna no acumulador
+    ld [MapColumnCount], a              ;   ┘
     ld d, 0                             ;   ┐ copia o valor em bytes para incrementar o ponteiro da VRAM no reg DE
     ld e, 12                            ;   ┘
     add hl, de                          ;   incrementa a posição do ponteiro da VRAM em DE bytes
 .continue:
-    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
     ld a, [TempMapD]                    ;   ┐
     ld d, a                             ;   │ recupera o ponteiro dos tiles
     ld a, [TempMapE]                    ;   │
@@ -807,7 +810,7 @@ CopyStatusBarData:
     ;Função pra copiar os menus/windows
 CopyWindowData:
     ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
-    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
+    ld [MapColumnCount], a                ;   armazena o contador de coluna na WRAM 
 .loop:
     ld a, [rVBK]                        ;   copia o banco da vram atual
     and %00000001                       ;   'filtra' o valor (0 ou 1)
@@ -823,7 +826,7 @@ CopyWindowData:
     ld [TempMapD], a                    ;   │ armazena o ponteiro dos tiles na WRAM
     ld a, e                             ;   │
     ld [TempMapE], a                    ;   ┘
-    ld a, [MapLineCount]                ;   copia o contador de linha pro acumulador
+    ld a, [MapColumnCount]                ;   copia o contador de coluna pro acumulador
     add 1                               ;   incrementa o contador
     push hl
     ld hl, TempWindowWidth
@@ -831,9 +834,7 @@ CopyWindowData:
     pop hl
     jp nz, .continue                    ;   pula pra função .continue caso a flag Z (zero) nao estiver setado
     ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
-    ld [MapLineCount], a                ;   copia o valor no acumulador na WRAM
-    ;ld d, 0                             ;   ┐ copia o valor em bytes para incrementar o ponteiro da VRAM no reg DE
-    ;ld e, 24                            ;   ┘
+    ld [MapColumnCount], a                ;   armazena o contador de coluna na WRAM 
     push af
     ld d, 0
     ld a, [TempWindowVRAMLineOffset]
@@ -841,7 +842,7 @@ CopyWindowData:
     pop af
     add hl, de                          ;   incrementa a posição do ponteiro da VRAM em DE bytes
 .continue:
-    ld [MapLineCount], a                ;   armazena o contador de linha na WRAM 
+    ld [MapColumnCount], a                ;   armazena o contador de coluna na WRAM 
     ld a, [TempMapD]                    ;   ┐
     ld d, a                             ;   │ recupera o ponteiro dos tiles
     ld a, [TempMapE]                    ;   │
@@ -874,18 +875,40 @@ ToggleStartMenu:
     jp .initCursor                          ;   Pula pra função que 'inicia' o cursor
 
 .hideStartMenu:
-    ld hl, SpritesDataRAM               ;   ┐ Copia o endereço das sprites da memoria
-    ld de, CursorSpriteOffset           ;   │ Copia o offset do cursor
-    add hl, de                          ;   ┘ Incrementa o offset no endereço
-    ld a, 0                             ;   ┐
-    ld [hl+], a                         ;   │ move/esconde a sprite pra fora da tela
-    ld [hl+], a                         ;   ┘
+    ld bc, SpritesDataRAM                   ;    Copia o endereço das sprites da memoria pro reg BC
 
-    ld a, HIGH(SpritesDataRAM)          ;   ┐ persiste a pos da sprite na vram
-    call DMARoutine                     ;   ┘
+    ld h, b                                 ;   ┐
+    ld l, c                                 ;   │
+    ld de, PlayerSpriteOffsetL              ;   │
+    add hl, de                              ;   │ Move o lado esquerdo da sprite pra posicão correta
+    ld a, [PlayerPosY]                      ;   │
+    ld [hl+], a                             ;   │
+    ld a, [PlayerPosX]                      ;   │
+    ld [hl], a                              ;   ┘
 
-    ld a, 144                           ;   ┐ Move o Menu pra fora tela
-    ld [rWY], a                         ;   ┘
+    ld h, b                                 ;   ┐
+    ld l, c                                 ;   │
+    ld de, PlayerSpriteOffsetR              ;   │
+    add hl, de                              ;   │ 
+    ld a, [PlayerPosY]                      ;   │ Move o lado direito da sprite pra posicão correta
+    ld [hl+], a                             ;   │
+    ld a, [PlayerPosX]                      ;   │
+    add 8                                   ;   │
+    ld [hl], a                              ;   ┘
+    
+    ld h, b                                 ;   ┐
+    ld l, c                                 ;   │
+    ld de, CursorSpriteOffset               ;   │
+    add hl, de                              ;   │ move/esconde a sprite do cursor pra fora da tela
+    ld a, 0                                 ;   │
+    ld [hl+], a                             ;   │
+    ld [hl], a                              ;   ┘
+
+    ld a, HIGH(SpritesDataRAM)              ;   ┐ persiste as posições das sprite
+    call DMARoutine                         ;   ┘
+
+    ld a, 144                               ;   ┐ Move o Menu pra fora tela
+    ld [rWY], a                             ;   ┘
     ret
     
 .initCursor:
@@ -953,6 +976,27 @@ WindowFunctions:
     call GetWindowAttributesFromID      ;   chama a função GetMenuAttributes
     call CopyWindowData                 ;   chama a função CopyWindowData
     call SetCGBVRAMBank0                ;   chama a função SetCGBVRAMBank0
+
+    ld bc, SpritesDataRAM               ;   Copia o endereço das sprites da memoria no reg BC
+
+    ld h, b                             ;   ┐
+    ld l, c                             ;   │
+    ld de, PlayerSpriteOffsetL          ;   │
+    add hl, de                          ;   │ Move o lado esquerdo da sprite pra fora da tela
+    ld a, 0                             ;   │
+    ld [hl+], a                         ;   │
+    ld [hl], a                          ;   ┘
+
+    ld h, b                             ;   ┐
+    ld l, c                             ;   │
+    ld de, PlayerSpriteOffsetR          ;   │
+    add hl, de                          ;   │ Move o lado direito da sprite pra fora da tela
+    ld a, 0                             ;   │
+    ld [hl+], a                         ;   │
+    ld [hl], a                          ;   ┘
+
+    ld a, HIGH(SpritesDataRAM)          ;   ┐ persiste a posição da sprite
+    call DMARoutine                     ;   ┘
 
     call LigarLCD                       ;   Liga a tela
     ret
@@ -1304,13 +1348,15 @@ KeyRead: ds 1                           ;   Buffer de leitura do keypad
 TilesPosX: ds 3                         ;   Tiles para exibir a posição X do player no mapa
 TilesPosY: ds 3                         ;   Tiles para exibir a posição Y do player no mapa
 TilesCol: ds 1                          ;   Tiles para exibir o tipo de colisão do tile
-TempMapD: ds 1                          ;   Armazenamento temporario do reg D
-TempMapE: ds 1                          ;   Armazenamento temporario do reg E
-MapLineCount: ds 1                      ;   Armazenamento do contador de linha do CopyMapData
 MenuEntry: ds 1                         ;   Índice do Menu
 TempWindowWidth: ds 1                   ;   Largura da WindowLayer
 TempWindowVRAMLineOffset: ds 1
 TempTiles: ds 15
+
+;Map Load Variables
+TempMapD: ds 1                          ;   Armazenamento temporario do reg D
+TempMapE: ds 1                          ;   Armazenamento temporario do reg E
+MapColumnCount: ds 1                     ;   Armazenamento do contador de linha
 
 SECTION "Player", WRAM0
 Name: ds 15
