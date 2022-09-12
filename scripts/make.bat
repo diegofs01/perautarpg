@@ -15,7 +15,7 @@ for /f %%f in ('dir /s/b %BASE_DIR%\*.asm') do %RGBDS_DIR%\rgbasm.exe -i %BASE_D
 
 for /f %%f in ('dir /b %OBJ_DIR%\*.o') do set objectList=!objectList! %OBJ_DIR%\%%f
 
-%RGBDS_DIR%\rgblink.exe -o %BASE_DIR%\perautarpg.gbc -n %BASE_DIR%\perautarpg.sym -m %OBJ_DIR%\perautarpg.map !objectList!
+%RGBDS_DIR%\rgblink.exe -m %OBJ_DIR%\perautarpg.map -n %BASE_DIR%\perautarpg.sym -o %BASE_DIR%\perautarpg.gbc !objectList! 
 
 %RGBDS_DIR%\rgbfix.exe -v -p 0xFF %BASE_DIR%\perautarpg.gbc
 %EMU_DIR%\bgb64.exe %BASE_DIR%\perautarpg.gbc

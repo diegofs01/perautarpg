@@ -60,18 +60,19 @@ GetWindowWitdhFromID::
     sla a                       ;       ├ Offset da tabela de Window com base no ID
     sla a                       ;   ────┘ ID 0 = Offset 0, ID 1 = Offset 16, etc
     add 6
-    ld e, a
     ld d, 0
+    ld e, a
     ld hl, WindowData             ;   move o ponteiro da tabela de Window pro reg HL
     add hl, de
+    ld de, TempWindowWidth
     ld a, [hl+]
-    ld b, a
+    ld [de], a
+    ld de, TempWindowVRAMLineOffset
     ld a, [hl]
-    ld c, a
+    ld [de], a
     ret
 
-SECTION "Window Data", ROMX
-
+SECTION "Window Pointer Table", ROMX
 WindowData:
     ;ID 0
     dw Menu_Tiles
@@ -79,7 +80,6 @@ WindowData:
     dw Menu_BytesLength
     db Menu_Width
     db Menu_VRAMLineOffset
-
     ;ID 1
     dw PlayerInfo_Tiles
     dw PlayerInfo_Attributes
@@ -87,14 +87,27 @@ WindowData:
     db PlayerInfo_Width
     db PlayerInfo_VRAMLineOffset
 
-Menu_Tiles:         INCBIN "data/windows/menu.tilemap"
-Menu_Attributes:    INCBIN "data/windows/menu.attrmap"
-Menu_BytesLength    EQU 144
-Menu_Width          EQU 8
-Menu_VRAMLineOffset EQU 24
+    dw StatusBar_Tiles
+    dw StatusBar_Attributes
+    dw StatusBar_BytesLength
+    db StatusBar_Width
+    db StatusBar_VRAMLineOffset
+
+SECTION "Window Data", ROMX
+Menu_Tiles:                 INCBIN "data/windows/menu.tilemap"
+Menu_Attributes:            INCBIN "data/windows/menu.attrmap"
+Menu_BytesLength            EQU 144
+Menu_Width                  EQU 8
+Menu_VRAMLineOffset         EQU 24
 
 PlayerInfo_Tiles:           INCBIN "data/windows/PlayerInfo.tilemap"
 PlayerInfo_Attributes:      INCBIN "data/windows/PlayerInfo.attrmap"
 PlayerInfo_BytesLength      EQU 360
 PlayerInfo_Width            EQU 20
-PlayerInfo_VRAMLineOffset         EQU 12
+PlayerInfo_VRAMLineOffset   EQU 12
+
+StatusBar_Tiles:            INCBIN "data/maps/statusbar.tilemap"
+StatusBar_Attributes:       INCBIN "data/maps/statusbar.attrmap"
+StatusBar_BytesLength       EQU 40
+StatusBar_Width             EQU 20
+StatusBar_VRAMLineOffset    EQU 12
