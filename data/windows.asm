@@ -57,13 +57,13 @@ WindowData:
     db StatusBar_VRAMLineOffset
     ds 6
     ;ID 1
-    db Menu_Bank
-    db Menu_ID
-    dw Menu_Tiles
-    dw Menu_Attributes
-    dw Menu_BytesLength
-    db Menu_Width
-    db Menu_VRAMLineOffset
+    db StartMenu_Bank
+    db StartMenu_ID
+    dw StartMenu_Tiles
+    dw StartMenu_Attributes
+    dw StartMenu_BytesLength
+    db StartMenu_Width
+    db StartMenu_VRAMLineOffset
     ds 6
     ;ID 2
     db PlayerInfo_Bank
