@@ -91,11 +91,13 @@ InitGame:
     ld [ScreenPosX], a
     ld a, 0                             ;   ┐ Seta ID 0 no ActiveMapId
     ld [ActiveMapId], a                 ;   ┘
+    ld [ActiveTilesetId], a
+
+    call GetTileSetData
+    call CopyTileSetToVRAM
+    call RenderStatusBar
 
     call ChangeMap
-
-    call CopyFontTilesData
-    call RenderStatusBar
 
     call CopySpritesToVRAM              ;   Chama a função GetSpriteTiles
     call CopySpriteOAMDataToWRAM
@@ -106,9 +108,9 @@ InitGame:
 
     ret
 
-;   ╔══════════════════════╗
-;   ║   "Funções do LCD"   ║
-;   ╚══════════════════════╝
+;   ╔════════════════════════════╗
+;   ║   "Funções de LCD/Banks"   ║
+;   ╚════════════════════════════╝
 
 ;   Função para esperar o 'V-Blank' do LCD
 WaitVBlank:
@@ -116,7 +118,6 @@ WaitVBlank:
 	cp 144			    ;   Compara o valor do acumulador com o valor 144 (inicio do V-Blank)
 	jp c, WaitVBlank    ;   Pula de volta pro inicio do loop se a flag carry (c) estiver setada (1)
 	ret                 ;   Retorna pra função anterior
-
 ;   Função para desligar o LCD
 DesligarLCD:
     ld a, [rLCDC]       ;   ┐
@@ -127,7 +128,6 @@ DesligarLCD:
     ld a, 0			    ;   ┐   Desliga o LCD setando o registrador do LCD em 0
     ld [rLCDC], a	    ;   ┘
     ret                 ;   ─   Retorna a função anterior
-
 ;   Função para ligar o LCD
 LigarLCD:
     ld a, [rLCDC]       ;   ┐
@@ -137,18 +137,51 @@ LigarLCD:
     ld a, LCD_FLAG      ;   ┐   Liga o LCD setando a flag LCD_FLAG no registrador do LCD
     ld [rLCDC], a	    ;   ┘
     ret                 ;   ─   Retorna a função anterior
-
 ;   Seleciona o Banco 0 da VRAM (Map Data)
 SetCGBVRAMBank0:
     ld a, 0             ;   ┐   Seta a VRAM pro bank 0
 	ld [rVBK], a        ;   ┘
 	ret                 ;   ─   Retorna para a função anterior
-
 ;   Seleciona o Banco 1 da VRAM (Map Attr)
 SetCGBVRAMBank1:
     ld a, 1			     ;   ┐   Seta a VRAM pro bank 1
 	ld [rVBK], a	     ;   ┘
 	ret				     ;   ─   Retorna para a função anterior
+;   Seta o bank da rom de acordo com o mapa
+SetRomBankFromMap:
+    ld a, [MapBank_D]
+    ld [rROMB0], a
+    ret
+;   Seta o bank da rom de acordo com o tileset
+SetRomBankFromTileset:
+    ld a, [TileSetBank_D]
+    ld [rROMB0], a
+    ret
+;   Seta o bank da rom de acordo com a window
+SetRomBankFromWindow:
+    ld a, [WindowBank_D]
+    ld [rROMB0], a
+    ret
+;   Reseta o bank da rom
+ResetRomBank:
+    ld a, 1
+    ld [rROMB0], a
+    ret
+;   Seta o bank da ram pra 1
+SetRamBank1:
+    ld a, 1
+    ld [rSVBK], a
+    ret
+;   Seta o bank da ram pra 2
+SetRamBank2:
+    ld a, 2
+    ld [rSVBK], a
+    ret
+;   Seta o bank da ram pra 3
+SetRamBank3:
+    ld a, 3
+    ld [rSVBK], a
+    ret
 
 ;   ╔═══════════════════════════════════════════════════╗
 ;   ║   "Funções de Cópia de Tiles/Data/Attr/Palette"   ║
@@ -166,9 +199,14 @@ CopyTileSetToVRAM:
     ld c, [hl]                          ;   │   armazena o tamanho em bytes do tileset no reg BC
     inc hl                              ;   │
     ld b, [hl]                          ;   ┘
+    call SetRomBankFromTileset
+    ld a, [ActiveTilesetId]
+    cp 0
+    jp z, .textfontVramLoc
     ld hl, _VRAM9000                    ;   ─   copia o ponteiro da VRAM do tileset no reg HL
-    ld a, [TileSetBank_D]
-    ld [rROMB0], a
+    jp .copyTileData
+.textfontVramLoc:
+    ld hl, _VRAM8800
 .copyTileData:
     ld a, [de]			                ;   ┐   copia o tile pra VRAM
     ld [hli], a			                ;   ┘
@@ -177,8 +215,14 @@ CopyTileSetToVRAM:
     ld a, b				                ;   ┐   Copia a quantidade de bytes restantes pro acumulador
 	or c				                ;   ┘
 	jp nz, .copyTileData                ;   ─   Pula de volta pro começo da função caso a flag Z (zero) nao estiver setado
-.setupPaletteData:
+    ld a, [ActiveTilesetId]
+    cp 0
+    jp z, .textFontBCPS
     ld a, BCPSF_AUTOINC                 ;   ┐ Seta o auto-incremento no reg de 'especificação de palheta de cor (tilemap)'
+    jp .setupPaletteData
+.textFontBCPS:
+    ld a, %10111000                     ;   ┐ Seta o auto-incremento no reg de 'especificação de palheta de cor (tilemap)'
+.setupPaletteData:
     ld [rBCPS], a 		                ;   ┘
     ld de, rBCPD                        ;   Copia o ponteiro do registrador de palheta de cores do background
     ld bc, TileSetPaletteData_P
@@ -197,8 +241,7 @@ CopyTileSetToVRAM:
     ld a, b				                ;   Copia a quantidade de bytes restantes pro acumulador
     cp 0 				                ;   Compara o acumulador
 	jp nz, .copyPaletteData             ;   Pula de volta se o acumulador nao for Zero
-    ld a, 1
-    ld [rROMB0], a
+    call ResetRomBank
 	ret					                ;   Retorna para a função anterior
 
 ; Função pra copia o mapa da ROM pra VRAM 
@@ -220,15 +263,13 @@ CopyMapToVRAM:
     ld e, [hl]                          ;   │ armazena o ponteiro dos atributos dos tiles no reg DE
     inc hl                              ;   │
     ld d, [hl]                          ;   ┘
-    jp .finishSetup                     ;   pula pra função .finishSetup
 .finishSetup:
     ld hl, MapByteSize_D                ;   ┐
     ld c, [hl]                          ;   │ armazena o tamanho do mapa no reg BC
     inc hl                              ;   │
     ld b, [hl]                          ;   ┘
     ld hl, _SCRN0                       ;   copia o ponteiro da VRAM do mapa no reg HL
-    ld a, [MapBank_D]
-    ld [rROMB0], a
+    call SetRomBankFromMap
 .loopCopy:
 	ld a, [de]			                ;   ┐ copia o tile/attr pra VRAM
 	ld [hli], a			                ;   ┘
@@ -267,14 +308,35 @@ CopyMapToVRAM:
 	ld a, b				                ;   ┐ copia a quantidade de tiles restanes no acumulador
 	or a, c				                ;   ┘
 	jp nz, .loopCopy  	                ;   pula de volta pro começo da função caso a flag Z (zero) nao estiver setado
-    ld a, 1
-    ld [rROMB0], a
+    call ResetRomBank
 	ret					                ;   retorna para a função anterior
 
     ;   Função pra copiar os menus/windows
 CopyWindowData:
+    call DesligarLCD 
+    ld a, [rVBK]                        ;   copia o valor do registrador de banco da VRAM pro acumulador
+    bit 0, a                            ;   verifica o bit 0 do acumulador e seta a flag de acordo (Z = 0, NZ <> 0)
+    jp nz, .prepareWindowAttr           ;   pula pra função .prepareWindowAttr se a flag Zero nao estiver setada (jp @ NZ)
+.prepareWindowData:
+    ld hl, WindowTiles_P                ;   ┐
+    ld e, [hl]                          ;   │ armazena o ponteiro dos tiles no reg DE
+    inc hl                              ;   │
+    ld d, [hl]                          ;   ┘
+    jp .finishSetup                     ;   pula pra função .finishSetup
+.prepareWindowAttr:
+    ld hl, WindowAttributes_P           ;   ┐
+    ld e, [hl]                          ;   │ armazena o ponteiro dos atributos dos tiles no reg DE
+    inc hl                              ;   │
+    ld d, [hl]                          ;   ┘
+.finishSetup:
+    ld hl, WindowBytesLength_P          ;   ┐
+    ld c, [hl]                          ;   │ armazena o tamanho do mapa no reg BC
+    inc hl                              ;   │
+    ld b, [hl]                          ;   ┘
+    ld hl, _SCRN1                       ;   copia o ponteiro da VRAM do mapa no reg HL
+    call SetRomBankFromWindow
     ld a, 0                             ;   copia o valor inicial do contador de linha no acumulador
-    ld [VRAMColumnCount], a              ;   armazena o contador de coluna na WRAM 
+    ld [VRAMColumnCount], a             ;   armazena o contador de coluna na WRAM 
 .loop:
     ld a, [rVBK]                        ;   copia o banco da vram atual
     and %00000001                       ;   'filtra' o valor (0 ou 1)
@@ -293,7 +355,7 @@ CopyWindowData:
     ld a, [VRAMColumnCount]                ;   copia o contador de coluna pro acumulador
     add 1                               ;   incrementa o contador
     push hl
-    ld hl, TempWindowWidth
+    ld hl, WindowWidth_D
     cp a, [hl]                          ;   compara o contador
     pop hl
     jp nz, .continue                    ;   pula pra função .continue caso a flag Z (zero) nao estiver setado
@@ -301,7 +363,7 @@ CopyWindowData:
     ld [VRAMColumnCount], a              ;   armazena o contador de coluna na WRAM 
     push af
     ld d, 0
-    ld a, [TempWindowVRAMLineOffset]
+    ld a, [WindowVRAMLineOffset_D]
     ld e, a
     pop af
     add hl, de                          ;   incrementa a posição do ponteiro da VRAM em DE bytes
@@ -314,21 +376,15 @@ CopyWindowData:
 	ld a, b				                ;   ┐ copia a quantidade de tiles restanes no acumulador
 	or a, c				                ;   ┘
 	jp nz, .loop    	                ;   pula de volta pro começo da função caso a flag Z (zero) nao estiver setado
+    call ResetRomBank
 	ret					                ;   retorna para a função anterior
 
 RenderStatusBar:
-    call DesligarLCD                    ;   Desliga a tela
-
-    ld a, StatusBarID
-    call GetWindowWitdhFromID
-
-    ld a, StatusBarID
-    call GetWindowDataFromID            ;   chama a função GetMenuData
+    ld a, 0
+    ld [ActiveWindowID], a
+    call GetWindowData                  ;   chama a função GetMenuData
     call CopyWindowData                 ;   chama a função CopyWindowData
     call SetCGBVRAMBank1                ;   chama a função SetCGBVRAMBank1
-
-    ld a, StatusBarID
-    call GetWindowAttributesFromID      ;   chama a função GetMenuAttributes
     call CopyWindowData                 ;   chama a função CopyWindowData
     call SetCGBVRAMBank0                ;   chama a função SetCGBVRAMBank0
     ret
@@ -346,8 +402,7 @@ ChangeMapFromColision:
 
     ld b, a
 
-    ld a, [MapBank_D]
-    ld [rROMB0], a
+    call SetRomBankFromMap
 
     ld de, MapWarps_P
 
@@ -369,8 +424,7 @@ ChangeMapFromColision:
     jp .checkWarps
 
 .checkFail:
-    ld a, 1
-    ld [rROMB0], a
+    call ResetRomBank
     ret
 
 .changeMap:
@@ -398,10 +452,7 @@ ChangeMapFromColision:
     ld [ActiveMapId], a
 
     call UpdatePlayerSpritePosition
-
-    ld a, 1
-    ld [rROMB0], a
-
+    call ResetRomBank
     call ChangeMap
     call LigarLCD
 
@@ -413,12 +464,8 @@ ChangeMap:
     call CopyMapToVRAM                  ;   Chama a função CopyMapToVRAM
     call SetCGBVRAMBank1                ;   Chama a função SetCGBVRAMBank1
     call CopyMapToVRAM                  ;   Chama a função CopyMapToVRAM
-
-    ld a, 3
-    ld [rSVBK], a
-
-    ld a, [MapBank_D]
-    ld [rROMB0], a
+    call SetRamBank3
+    call SetRomBankFromMap
 
     ld hl, MapByteSize_D
     ld c, [hl]
@@ -443,10 +490,8 @@ ChangeMap:
     cp 0
     jp nz, .copyMapColisionToWRAM
 
-    ld a, 1
-    ld [rSVBK], a
-    ld [rROMB0], a
-    
+    call SetRamBank1
+    call ResetRomBank    
 
     ld a, [MapTileSetId_D]              ;   ┐ Seta o ID do tileset com o ID fornecido pelo tilemap
     ld [ActiveTilesetId], a             ;   ┘
@@ -895,71 +940,78 @@ Debug_ConvertPosToTile:
 ;   ╚═════════════════╝ 
 
 SECTION "OAM DMA", HRAM
-hOAMDMA: ds 8                           ;   Espaço na HRAM para alocar a função de cópia de bytes pra OAM
+hOAMDMA:                    ds 8    ;   Espaço na HRAM para alocar a função de cópia de bytes pra OAM
 
 SECTION "Variaveis_OAM", WRAM0[$C100]
-SpritesDataRAM:: ds 12                   ;   Data das sprites para copiar a OAM
+SpritesDataRAM::            ds 12   ;   Data das sprites para copiar a OAM
 
 SECTION "Variaveis", WRAM0[$C000]
-KeyRead: ds 1                           ;   Buffer de leitura do keypad
-MenuEntry: ds 1                         ;   Índice do Menu
-TempRenderStatsTiles: ds 15
-ScreenPosY: ds 1
-ScreenPosX: ds 1
+KeyRead:                    ds 1    ;   Buffer de leitura do keypad
+MenuEntry:                  ds 1    ;   Índice do Menu
+TempRenderStatsTiles:       ds 15
+ScreenPosY:                 ds 1    ;   Posição Y da tela
+ScreenPosX:                 ds 1    ;   Posição X da tela
 ;VRAM Load Variables
-VRAMTempD: ds 1                         ;   Armazenamento temporario do reg D
-VRAMTempE: ds 1                         ;   Armazenamento temporario do reg E
-VRAMColumnCount: ds 1                   ;   Armazenamento do contador de coluna da VRAM
-TempPlayerPosY:: ds 1
-TempPlayerPosX:: ds 1
-ByteColisao:: ds 1
-;SECTION "Player Data", WRAM0[$C000]
-PlayerPosY:: ds 1    ;   Posição Y do jogador
-PlayerPosX:: ds 1    ;   Posição X do jogador
-Name: ds 15         ;   ┐
-Health: ds 1        ;   │
-Mana: ds 1          ;   │
-Experience: ds 2    ;   │
-Attack: ds 1        ;   │ Player Data
-Defense: ds 1       ;   │
-Speed: ds 1         ;   │
-Money: ds 2         ;   │
-;Inventory          ;   ┘
-;SECTION "Map WRAM", WRAM0[$C000]
-MapBank_D:: ds 1        ; (data) rom bank do mapa
-MapData_P:: ds 2        ; (ponteiro) data do tilemap
-MapAttr_P:: ds 2        ; (ponteiro) atributos do tilemap
-MapByteSize_D:: ds 2    ; (data) tamanho em bytes do tilemap
-MapTileSetId_D:: ds 1   ; (data) id do tileset usado pelo tilemap
-MapColision_P:: ds 2    ; (ponteiro) colisao do tilemap
-MapWarps_P:: ds 2       ; (ponteiro) tabela de warps do mapa
-MapWidth_D:: ds 1       ; (data) largura (X) do mapa
-MapHeigth_D:: ds 1      ; (data) altura (Y) do mapa
-MapUnused: ds 2         ; Possível uso futuro
-ActiveMapId:: ds 1      ; ID do mapa atual
-;SECTION "TileSet WRAM", WRAM0[$C000]
-TileSetBank_D:: ds 1                ; (data) rom bank do mapa
-TileSetData_P:: ds 2                ; (ponteiro) data do tileset
-TileSetDataSize_D:: ds 2            ; (data) tamanho em bytes do tileset
-TileSetPaletteData_P:: ds 2         ; (ponteiro) palheta de cores do tileset
-TileSetPaletteDataSize_D:: ds 1     ; (data) tamanho em bytes do tileset
-TileSetUnused: ds 1                 ; Possível uso futuro
-ActiveTilesetId:: ds 1              ; ID do tileset atual
-TileSetPallete:: ds 64              ; Palheta de cores do tileset   
-;SECTION "Window WRAM", WRAM0[$C000]
+VRAMTempD:                  ds 1    ;   Armazenamento temporario do reg D
+VRAMTempE:                  ds 1    ;   Armazenamento temporario do reg E
+VRAMColumnCount:            ds 1    ;   Armazenamento do contador de coluna da VRAM
+TempPlayerPosY::            ds 1    ;   Posição Y Temporaria do jogador
+TempPlayerPosX::            ds 1    ;   Posição X Temporaria do jogador
 TempWindowWidth::           ds 1
 TempWindowVRAMLineOffset::  ds 1
-;BytesLivre: ds 111
+;SECTION "Player Data", WRAM0[$C000]
+PlayerPosY::                ds 1    ;   Posição Y do jogador
+PlayerPosX::                ds 1    ;   Posição X do jogador
+Name:                       ds 15   ;   ┐
+Health:                     ds 1    ;   │
+Mana:                       ds 1    ;   │
+Experience:                 ds 2    ;   │
+Attack:                     ds 1    ;   │ Player Data
+Defense:                    ds 1    ;   │
+Speed:                      ds 1    ;   │
+Money:                      ds 2    ;   │
+;Inventory:                 ds ?    ;   ┘
+;SECTION "Map WRAM", WRAM0[$C000]
+MapBank_D::                 ds 1    ;   (data) rom bank do mapa
+MapId_D::                   ds 1
+MapData_P::                 ds 2    ;   (ponteiro) data do tilemap
+MapAttr_P::                 ds 2    ;   (ponteiro) atributos do tilemap
+MapByteSize_D::             ds 2    ;   (data) tamanho em bytes do tilemap
+MapTileSetId_D::            ds 1    ;   (data) id do tileset usado pelo tilemap
+MapColision_P::             ds 2    ;   (ponteiro) colisao do tilemap
+MapWarps_P::                ds 2    ;   (ponteiro) tabela de warps do mapa
+MapWidth_D::                ds 1    ;   (data) largura (X) do mapa
+MapHeigth_D::               ds 1    ;   (data) altura (Y) do mapa
+ActiveMapId::               ds 1    ;   ID do mapa atual
+ByteColisao::               ds 1    ;   Byte de Colisao
+;SECTION "TileSet WRAM", WRAM0[$C000]
+TileSetBank_D::             ds 1    ;   (data) rom bank do mapa
+TileSetId_D::               ds 1
+TileSetData_P::             ds 2    ;   (ponteiro) data do tileset
+TileSetDataSize_D::         ds 2    ;   (data) tamanho em bytes do tileset
+TileSetPaletteData_P::      ds 2    ;   (ponteiro) palheta de cores do tileset
+TileSetPaletteDataSize_D::  ds 1    ;   (data) tamanho em bytes do tileset
+ActiveTilesetId::           ds 1    ;   ID do tileset atual
+TileSetPallete::            ds 64   ;   Palheta de cores do tileset   
+;SECTION "Window WRAM", WRAM0[$C000]
+WindowBank_D::              ds 1
+WindowId_D::                ds 1                 
+WindowTiles_P::             ds 2
+WindowAttributes_P::        ds 2
+WindowBytesLength_P::       ds 2
+WindowWidth_D::             ds 1
+WindowVRAMLineOffset_D::    ds 1
+ActiveWindowID::            ds 1    ;   ID da window atual
 
 SECTION "TileSet Data", WRAMX, BANK[2]
-TileSetData:: ds 2048               ; Dados do tileSet
+;TileSetData::              ds 2048 ;   Dados do tileSet
 
 SECTION "Map Data", WRAMX, BANK[3]
-MapData:: ds 768        ; Data do mapa atual
-MapAttributes:: ds 768  ; Atributos do mapa atual
-MapColision:: ds 768    ; Tabela de colisao do mapa atual
+;MapData::                  ds 768  ;   Dados do mapa atual
+;MapAttributes::            ds 768  ;   Atributos do mapa atual
+MapColision::               ds 768  ;   Tabela de colisao do mapa atual
 
 SECTION "Debug", WRAM0[$CF00]
-Debug_DataToProcess: ds 1
-Debug_DataProcessed: ds 3
-Debug_WRAMLoc: ds 2
+Debug_DataToProcess:        ds 1
+Debug_DataProcessed:        ds 3
+Debug_WRAMLoc:              ds 2

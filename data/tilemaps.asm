@@ -1,6 +1,4 @@
 INCLUDE "hardware.inc"
-;DEF MapVRAMLoc EQU $9800
-;DEF StatusBarVRAMLoc EQU $9A00
 
 SECTION "Tile Map Functions", ROMX
 ;   Copia os ponteiros e dados do Mapa na Memoria
@@ -225,71 +223,71 @@ GetMapWarpData::
 SECTION "Tile Map Pointer Table", ROMX
 TileMaps:                       ; 16 bytes per entry
     ;ID 0
-    db Map01_Bank                   ; 1 byte    -   bank do tilemap
-    dw Map01_Tiles                  ; 2 bytes   -   data do tilemap
-    dw Map01_Attributes             ; 2 bytes   -   atributos do tilemap
-    dw Map01_BytesLength            ; 2 bytes   -   tamanho em bytes do tilemap
-    db Map01_TileSetId              ; 1 byte    -   id do tileset usado pelo tilemap
-    dw Map01_Colision               ; 2 bytes   -   colisao do tilemap
-    dw Map01_Warps                  ; 2 bytes   -   tabela de warps do mapa
-    db Map01_Width                  ; 1 byte    -   largura / X
-    db Map01_Heigth                 ; 1 byte    -   altura  / Y
+    db Machi_Centro_Bank                   ; 1 byte    -   bank do tilemap
+    dw Machi_Centro_Tiles                  ; 2 bytes   -   data do tilemap
+    dw Machi_Centro_Attributes             ; 2 bytes   -   atributos do tilemap
+    dw Machi_Centro_BytesLength            ; 2 bytes   -   tamanho em bytes do tilemap
+    db Machi_Centro_TileSetId              ; 1 byte    -   id do tileset usado pelo tilemap
+    dw Machi_Centro_Colision               ; 2 bytes   -   colisao do tilemap
+    dw Machi_Centro_Warps                  ; 2 bytes   -   tabela de warps do mapa
+    db Machi_Centro_Width                  ; 1 byte    -   largura / X
+    db Machi_Centro_Heigth                 ; 1 byte    -   altura  / Y
     dw                              ; 2 bytes   -   zeros   ───── Possível uso futuro
     ; ID 1
-    db House01_Bank                 ; 1 byte    -   bank do tilemap
-    dw House01_Tiles                ; 2 bytes   -   data do tilemap
-    dw House01_Attributes           ; 2 bytes   -   atributos do tilemap
-    dw House01_BytesLength          ; 2 bytes   -   tamanho em bytes do tilemap
-    db House01_TileSetId            ; 1 byte    -   id do tileset usado pelo tilemap
-    dw House01_Colision             ; 2 bytes   -   colisao do tilemap
-    dw House01_Warps                ; 2 bytes   -   tabela de warps do mapa
-    db House01_Width                ; 1 byte    -   largura / X
-    db House01_Heigth               ; 1 byte    -   altura  / Y
+    db Machi_Casa_01_Bank                 ; 1 byte    -   bank do tilemap
+    dw Machi_Casa_01_Tiles                ; 2 bytes   -   data do tilemap
+    dw Machi_Casa_01_Attributes           ; 2 bytes   -   atributos do tilemap
+    dw Machi_Casa_01_BytesLength          ; 2 bytes   -   tamanho em bytes do tilemap
+    db Machi_Casa_01_TileSetId            ; 1 byte    -   id do tileset usado pelo tilemap
+    dw Machi_Casa_01_Colision             ; 2 bytes   -   colisao do tilemap
+    dw Machi_Casa_01_Warps                ; 2 bytes   -   tabela de warps do mapa
+    db Machi_Casa_01_Width                ; 1 byte    -   largura / X
+    db Machi_Casa_01_Heigth               ; 1 byte    -   altura  / Y
     dw                              ; 2 bytes   -   zeros   ───── Possível uso futuro
     ; ID 2
-    db House02_Bank                 ; 1 byte    -   bank do tilemap
-    dw House02_Tiles                
-    dw House02_Attributes           
-    dw House02_BytesLength          
-    db House02_TileSetId            
-    dw House02_Colision             
-    dw House02_Warps                
-    db House02_Width
-    db House02_Heigth
+    db Machi_Casa_02_Bank                 ; 1 byte    -   bank do tilemap
+    dw Machi_Casa_02_Tiles                
+    dw Machi_Casa_02_Attributes           
+    dw Machi_Casa_02_BytesLength          
+    db Machi_Casa_02_TileSetId            
+    dw Machi_Casa_02_Colision             
+    dw Machi_Casa_02_Warps                
+    db Machi_Casa_02_Width
+    db Machi_Casa_02_Heigth
     dw
     ;ID 3
-    db Map02_Bank      
-    dw Map02_Tiles      
-    dw Map02_Attributes 
-    dw Map02_BytesLength
-    db Map02_TileSetId  
-    dw Map02_Colision   
-    dw Map02_Warps      
-    db Map02_Width
-    db Map02_Heigth 
+    db Machi_Lago_Bank      
+    dw Machi_Lago_Tiles      
+    dw Machi_Lago_Attributes 
+    dw Machi_Lago_BytesLength
+    db Machi_Lago_TileSetId  
+    dw Machi_Lago_Colision   
+    dw Machi_Lago_Warps      
+    db Machi_Lago_Width
+    db Machi_Lago_Heigth 
     dw 
     ;ID 4
-    db Lab01_Bank      
-    dw Lab01_Tiles      
-    dw Lab01_Attributes 
-    dw Lab01_BytesLength
-    db Lab01_TileSetId  
-    dw Lab01_Colision   
-    dw Lab01_Warps      
-    db Lab01_Width
-    db Lab01_Heigth 
+    db Machi_Lab_01_Bank      
+    dw Machi_Lab_01_Tiles      
+    dw Machi_Lab_01_Attributes 
+    dw Machi_Lab_01_BytesLength
+    db Machi_Lab_01_TileSetId  
+    dw Machi_Lab_01_Colision   
+    dw Machi_Lab_01_Warps      
+    db Machi_Lab_01_Width
+    db Machi_Lab_01_Heigth 
     dw 
 
 SECTION "Tile Map Data", ROMX, BANK[3]
-Map01_Bank          EQU 3
-Map01_ID            EQU 0
-Map01_Tiles:        INCBIN "data/maps/map01.tilemap"
-Map01_Attributes:   INCBIN "data/maps/map01.attrmap"
-Map01_BytesLength   EQU 320
-Map01_TileSetId     EQU 0  
-Map01_Width         EQU 20
-Map01_Heigth        EQU 16
-Map01_Colision:
+Machi_Centro_Bank          EQU 3
+Machi_Centro_ID            EQU 0
+Machi_Centro_Tiles:        INCBIN "data/maps/Machi_Centro.tilemap"
+Machi_Centro_Attributes:   INCBIN "data/maps/Machi_Centro.attrmap"
+Machi_Centro_BytesLength   EQU 320
+Machi_Centro_TileSetId     EQU 1 ;Machi_Exterior_01_ID
+Machi_Centro_Width         EQU 20
+Machi_Centro_Heigth        EQU 16
+Machi_Centro_Colision:
     DB   0, 0, 0, 0,   0, 0, 0, 0,   0,   0, 0, 0,   0, 0, 0, 0, 0, 0,   0, 0
     DB   0, 0, 0, 0,   0, 0, 0, 0,   0,   0, 0, 0,   0, 0, 0, 0, 0, 0,   0, 0
     DB   0, 0, 0, 0,   0, 0, 0, 0,   1,   0, 0, 0,   0, 0, 0, 0, 0, 0,   0, 0
@@ -306,33 +304,25 @@ Map01_Colision:
     DB   0, 0, 0, 0,   0, 0, 0, 0,   1,   1, 1, 0,   0, 0, 0, 0, 0, 0,   0, 0 
     DB   0, 0, 0, 0,   0, 0, 0, 0, 255, 255, 0, 0,   0, 0, 0, 0, 0, 0,   0, 0
     DB   0, 0, 0, 0,   0, 0, 0, 0,   0,   0, 0, 0,   0, 0, 0, 0, 0, 0,   0, 0 
-Map01_Warps:
-    ;  MapPosX, MapPosY, To Map Pos X, To Map Pos Y,  To Map ID,
-    ;DB      32,      40,           72,          112, House01_ID,
-    ;DB      96,      40,           40,          112, House02_ID,
-    ;DB     144,      72,            0,           72,   Map02_ID,
-    ;DB     144,      80,            0,           80,   Map02_ID,
-    ;DB       0,      72,           80,          112,   Lab01_ID,
-    ;DB       0,      80,           80,          112,   Lab01_ID,
-    ;DB     255,     255
+Machi_Centro_Warps:
     ;Warp ID, To Map Pos X, To Map Pos Y, To SCX, To SCY, To Map ID,
-    DB 0, 72, 112,  0,  0, House01_ID,
-    DB 1, 40, 112,  0,  0, House02_ID,
-    DB 2,  0,  72,  0,  0,   Map02_ID,
-    DB 3,  0,  80,  0,  0,   Map02_ID,
-    DB 4, 72, 112, 48, 64,   Lab01_ID,
-    DB 5, 72, 112, 48, 64,   Lab01_ID,
+    DB 0, 72, 112,  0,  0, Machi_Casa_01_ID,
+    DB 1, 40, 112,  0,  0, Machi_Casa_02_ID,
+    DB 2,  0,  72,  0,  0, Machi_Lago_ID,
+    DB 3,  0,  80,  0,  0, Machi_Lago_ID,
+    DB 4, 72, 112, 48, 64, Machi_Lab_01_ID,
+    DB 5, 72, 112, 48, 64, Machi_Lab_01_ID,
     DB 127
 
-House01_Bank          EQU 3
-House01_ID            EQU 1
-House01_Tiles:        INCBIN "data/maps/house01.tilemap"
-House01_Attributes:   INCBIN "data/maps/house01.attrmap"
-House01_BytesLength   EQU 320
-House01_TileSetId     EQU 1
-House01_Width         EQU 20
-House01_Heigth        EQU 16
-House01_Colision:
+Machi_Casa_01_Bank          EQU 3
+Machi_Casa_01_ID            EQU 1
+Machi_Casa_01_Tiles:        INCBIN "data/maps/Machi_Casa_01.tilemap"
+Machi_Casa_01_Attributes:   INCBIN "data/maps/Machi_Casa_01.attrmap"
+Machi_Casa_01_BytesLength   EQU 320
+Machi_Casa_01_TileSetId     EQU 3 ;Machi_Interior_01_ID
+Machi_Casa_01_Width         EQU 20
+Machi_Casa_01_Heigth        EQU 16
+Machi_Casa_01_Colision:
 	DB 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	DB 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	DB 1, 0, 0, 0, 0, 0, 0, 0, 1,   1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0
@@ -349,23 +339,20 @@ House01_Colision:
 	DB 0, 0, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0
 	DB 0, 0, 1, 1, 1, 1, 1, 1, 1, 128, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0
 	DB 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-House01_Warps:
-    ;  MapPosX, MapPosY, To Map Pos X, To Map Pos Y, To Map ID,
-    ;DB      72,     112,           32,           56,  Map01_ID,
-    ;DB     255,     255
+Machi_Casa_01_Warps:
     ;Warp ID, To Map Pos X, To Map Pos Y, To SCX, To SCY, To Map ID,
-    DB 0, 32, 56, 0, 0, Map01_ID,
+    DB 0, 32, 56, 0, 0, Machi_Centro_ID,
     DB 127
 
-House02_Bank          EQU 3
-House02_ID            EQU 2
-House02_Tiles:        INCBIN "data/maps/house02.tilemap"
-House02_Attributes:   INCBIN "data/maps/house02.attrmap"
-House02_BytesLength   EQU 320
-House02_TileSetId     EQU 1
-House02_Width         EQU 20
-House02_Heigth        EQU 16
-House02_Colision:
+Machi_Casa_02_Bank          EQU 3
+Machi_Casa_02_ID            EQU 2
+Machi_Casa_02_Tiles:        INCBIN "data/maps/Machi_Casa_02.tilemap"
+Machi_Casa_02_Attributes:   INCBIN "data/maps/Machi_Casa_02.attrmap"
+Machi_Casa_02_BytesLength   EQU 320
+Machi_Casa_02_TileSetId     EQU 3 ;Machi_Interior_01_ID
+Machi_Casa_02_Width         EQU 20
+Machi_Casa_02_Heigth        EQU 16
+Machi_Casa_02_Colision:
 	DB 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	DB 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	DB 0, 0, 0, 0, 1,   1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0
@@ -382,23 +369,20 @@ House02_Colision:
 	DB 0, 0, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0
 	DB 0, 0, 1, 1, 1, 128, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0
 	DB 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-House02_Warps:
-    ;  MapPosX, MapPosY, To Map Pos X, To Map Pos Y, To Map ID,
-    ;DB      40,     112,           96,           56,  Map01_ID,
-    ;DB     255,     255
+Machi_Casa_02_Warps:
     ;Warp ID, To Map Pos X, To Map Pos Y, To SCX, To SCY, To Map ID,
-    DB 0, 96, 56, 0, 0, Map01_ID,
+    DB 0, 96, 56, 0, 0, Machi_Centro_ID,
     DB 127
 
-Map02_Bank          EQU 3
-Map02_ID            EQU 3
-Map02_Tiles:        INCBIN "data/maps/map02.tilemap"
-Map02_Attributes:   INCBIN "data/maps/map02.attrmap"
-Map02_BytesLength   EQU 320
-Map02_TileSetId     EQU 2
-Map02_Width         EQU 20
-Map02_Heigth        EQU 16
-Map02_Colision:
+Machi_Lago_Bank          EQU 3
+Machi_Lago_ID            EQU 3
+Machi_Lago_Tiles:        INCBIN "data/maps/Machi_Lago.tilemap"
+Machi_Lago_Attributes:   INCBIN "data/maps/Machi_Lago.attrmap"
+Machi_Lago_BytesLength   EQU 320
+Machi_Lago_TileSetId     EQU 2 ;Machi_Exterior_02_ID
+Machi_Lago_Width         EQU 20
+Machi_Lago_Heigth        EQU 16
+Machi_Lago_Colision:
     DB   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     DB   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     DB   0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0
@@ -415,77 +399,46 @@ Map02_Colision:
     DB   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     DB   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     DB   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-Map02_Warps:
-    ;  MapPosX, MapPosY, To Map Pos X, To Map Pos Y, To Map ID,
-    ;DB       0,      72,          144,           72,  Map01_ID,
-    ;DB       0,      80,          144,           80,  Map01_ID,
-    ;DB     255,     255
+Machi_Lago_Warps:
     ;Warp ID, To Map Pos X, To Map Pos Y, To SCX, To SCY, To Map ID,
-    DB 0, 144, 72, 0, 0, Map01_ID,
-    DB 1, 144, 80, 0, 0, Map01_ID,
+    DB 0, 144, 72, 0, 0, Machi_Centro_ID,
+    DB 1, 144, 80, 0, 0, Machi_Centro_ID,
     DB 127
 
-Lab01_Bank          EQU 3
-Lab01_ID            EQU 4
-Lab01_Tiles:        INCBIN "data/maps/lab01.tilemap"
-Lab01_Attributes:   INCBIN "data/maps/lab01.attrmap"
-Lab01_BytesLength   EQU 768
-Lab01_TileSetId     EQU 3
-Lab01_Width         EQU 32
-Lab01_Heigth        EQU 24
-Lab01_Colision: 
-    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
-    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
-    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
-    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
-    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
-    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
-    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 128, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-;Lab01_Colision2:
-;    ;   00,  01,  02,  03,  04,  05,  06,  07,  08,  09,  0A,  0B,  0C,  0D,  0E,  0F,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  1A,  1B,  1C,  1D,  1E,  1F
-;    DB  00,  01,  02,  03,  04,  05,  06,  07,  08,  09,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31, ;00
-;    DB  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63, ;01
-;    DB  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95, ;02
-;    DB  96,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, ;03
-;    DB 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, ;04
-;    DB 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, ;05
-;    DB 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, ;06
-;    DB 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, ;07
-;    DB  00,  01,  02,  03,  04,  05,  06,  07,  08,  09,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31, ;08
-;    DB  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63, ;09
-;    DB  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95, ;0A
-;    DB  96,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, ;0B
-;    DB 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, ;0C
-;    DB 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, ;0D
-;    DB 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, ;0E
-;    DB 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, ;0F
-;    DB  00,  01,  02,  03,  04,  05,  06,  07,  08,  09,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31, ;10
-;    DB  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63, ;11
-;    DB  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95, ;12
-;    DB  96,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, ;13
-;    DB 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, ;14
-;    DB 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, ;15
-;    DB 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, ;16
-;    DB 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, ;17
-Lab01_Warps:
-;    DB 128, 184, 0, 72, Map01_ID,
+Machi_Lab_01_Bank          EQU 3
+Machi_Lab_01_ID            EQU 4
+Machi_Lab_01_Tiles:        INCBIN "data/maps/Machi_Lab_01.tilemap"
+Machi_Lab_01_Attributes:   INCBIN "data/maps/Machi_Lab_01.attrmap"
+Machi_Lab_01_BytesLength   EQU 768
+Machi_Lab_01_TileSetId     EQU 4 ;Machi_Interior_02_ID
+Machi_Lab_01_Width         EQU 32
+Machi_Lab_01_Heigth        EQU 24
+Machi_Lab_01_Colision: 
+    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,   0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0
+    DB 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 128, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+    DB 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+Machi_Lab_01_Warps:
     ;Warp ID, To Map Pos X, To Map Pos Y, To SCX, To SCY, To Map ID,
-    DB 0, 0, 72, 0, 0, Map01_ID,
+    DB 0, 0, 72, 0, 0, Machi_Centro_ID,
     DB 127
