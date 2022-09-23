@@ -12,13 +12,12 @@ KEY_UP              EQU %00000100       ;       │
 KEY_LEFT            EQU %00000010       ;       │
 KEY_RIGHT           EQU %00000001       ;   ────┘
 ;Sprite stuff
-PlayerSpriteOffsetL EQU 4               ;   Offset em bytes da sprite esquerda do jogador
-PlayerSpriteOffsetR EQU 8               ;   Offset em bytes da sprite direita do jogador
-CursorSpriteOffset  EQU 12              ;   Offset em bytes da sprite direita do jogador
+CursorSpriteOffset		EQU 0               ;   Offset em bytes da sprite direita do jogador
+PlayerSpriteDataOffset	EQU 4               ;   Offset em bytes da sprite do jogador
 ;IDs dos menus
-StartMenuID         EQU 0
-PlayerInfoMenuID    EQU 1
-StatusBarID         EQU 2
+StartMenuID			EQU 0
+PlayerInfoMenuID	EQU 1
+StatusBarID			EQU 2
 
 SECTION "Some Defs", ROM0
 NomeHardCoded: DB "PERALTA[\\]RGBDS"     ; temporario, max 15 caracteres
@@ -451,7 +450,7 @@ ChangeMapFromColision:
     ld a, [hl]
     ld [ActiveMapId], a
 
-    call UpdatePlayerSpritePosition
+    call UpdatePlayerSpriteData
     call ResetRomBank
     call ChangeMap
     call LigarLCD
@@ -602,26 +601,27 @@ CheckKeyRead:
 ;   ╔═════════════════════════╗
 ;   ║   "Funções de Sprite"   ║
 ;   ╚═════════════════════════╝
-
 ;   Função para atualizar a posição da sprite do jogador
-UpdatePlayerSpritePosition:
+UpdatePlayerSpriteData:
     ld hl, SpritesDataRAM               ;   move o valor da label pro registrador HL
-    ld de, PlayerSpriteOffsetL          ;   move o valor da label pro registrador DE
+    ld de, PlayerSpriteDataOffset           ;   move o valor da label pro registrador DE
     add hl, de                          ;   adiciona o valor do reg DE no reg HL
     ld a, [PlayerPosY]                  ;   move o byte apontado pela label no acumulador
     ld [hl+], a                         ;   move o valor do acumulador pro byte apontado pelo reg HL e incrementa HL
     ld a, [PlayerPosX]                  ;   move o byte apontado pela label no acumulador
-    ld [hl], a                          ;   move o valor do acumulador pro byte apontado pelo reg HL
-
-    ld hl, SpritesDataRAM               ;   move o valor da label pro registrador HL
-    ld de, PlayerSpriteOffsetR          ;   move o valor da label pro registrador DE
-    add hl, de                          ;   adiciona o valor do reg DE no reg HL
+    ld [hl+], a                          ;   move o valor do acumulador pro byte apontado pelo reg HL
+	ld a, [SpriteTile]
+	ld [hl], a
+    inc hl
+    inc hl
     ld a, [PlayerPosY]                  ;   move o byte apontado pela label no acumulador
     ld [hl+], a                         ;   move o valor do acumulador pro byte apontado pelo reg HL e incrementa HL
     ld a, [PlayerPosX]                  ;   move o byte apontado pela label no acumulador
     add a, 8                            ;   adiciona 8 no acumulador
-    ld [hl], a                          ;   move o valor do acumulador pro byte apontado pelo reg HL
-
+    ld [hl+], a                          ;   move o valor do acumulador pro byte apontado pelo reg HL
+	ld a, [SpriteTile]
+	add 2
+	ld [hl], a
     ld a, HIGH(SpritesDataRAM)          ;   move o byte 'alto' da label pro acumulador
     call DMARoutine                     ;   chama a função DMARoutine
     ret				                    ;   retorna para a função anterior
@@ -634,6 +634,12 @@ MoverSpriteDireita:
     ld a, [PlayerPosY]
     ld [TempPlayerPosY], a
     call GetColisionData
+	
+	ld hl, TileIndexes
+	ld de, 2
+	add hl, de
+	ld a, [hl]
+	ld [SpriteTile], a
 
     ld a, [ByteColisao]
     cp 0
@@ -667,12 +673,13 @@ MoverSpriteDireita:
     add 8
     ld [ScreenPosX], a
     ld [rSCX], a
+	call UpdatePlayerSpriteData
     ret
 .moverSpriteDireita:
     ld a, [PlayerPosX]
     add 8
     ld [PlayerPosX], a
-    call UpdatePlayerSpritePosition
+    call UpdatePlayerSpriteData
     ret
 
 ;   Função para mover a sprite do jogador para a esquerda
@@ -683,6 +690,12 @@ MoverSpriteEsquerda:
     ld a, [PlayerPosY]
     ld [TempPlayerPosY], a
     call GetColisionData
+
+	ld hl, TileIndexes
+	ld de, 1
+	add hl, de
+	ld a, [hl]
+	ld [SpriteTile], a
 
     ld a, [ByteColisao]
     cp 0
@@ -710,12 +723,13 @@ MoverSpriteEsquerda:
     sub 8
     ld [ScreenPosX], a
     ld [rSCX], a
+	call UpdatePlayerSpriteData
     ret
 .moverSpriteEsquerda:
     ld a, [PlayerPosX]
     sub 8
     ld [PlayerPosX], a
-    call UpdatePlayerSpritePosition
+	call UpdatePlayerSpriteData
     ret
 
 ;   Função para mover a sprite do jogador para baixo
@@ -726,6 +740,12 @@ MoverSpriteBaixo:
     add 8
     ld [TempPlayerPosY], a
     call GetColisionData
+
+	ld hl, TileIndexes
+	ld de, 4
+	add hl, de
+	ld a, [hl]
+	ld [SpriteTile], a
 
     ld a, [ByteColisao]
     cp 0
@@ -759,12 +779,13 @@ MoverSpriteBaixo:
     add 8
     ld [ScreenPosY], a
     ld [rSCY], a
+	call UpdatePlayerSpriteData
     ret
 .moverSpriteBaixo
     ld a, [PlayerPosY]
     add 8
     ld [PlayerPosY], a
-    call UpdatePlayerSpritePosition
+    call UpdatePlayerSpriteData
     ret
 
 ;   Função para mover a sprite do jogador para cima
@@ -775,6 +796,12 @@ MoverSpriteCima:
     sub 8
     ld [TempPlayerPosY], a
     call GetColisionData
+
+	ld hl, TileIndexes
+	ld de, 3
+	add hl, de
+	ld a, [hl]
+	ld [SpriteTile], a
 
     ld a, [ByteColisao]
     cp 0
@@ -802,12 +829,13 @@ MoverSpriteCima:
     sub 8
     ld [ScreenPosY], a
     ld [rSCY], a
+	call UpdatePlayerSpriteData
     ret
 .moverSpriteCima
     ld a, [PlayerPosY]
     sub 8
     ld [PlayerPosY], a
-    call UpdatePlayerSpritePosition
+    call UpdatePlayerSpriteData
     ret
 
 ;   ╔═══════════════════╗
@@ -960,6 +988,7 @@ TempPlayerPosX::            ds 1    ;   Posição X Temporaria do jogador
 TempWindowWidth::           ds 1
 TempWindowVRAMLineOffset::  ds 1
 ;SECTION "Player Data", WRAM0[$C000]
+SpriteTile::				ds 1	;	Tile usado pela sprite do jogador
 PlayerPosY::                ds 1    ;   Posição Y do jogador
 PlayerPosX::                ds 1    ;   Posição X do jogador
 Name:                       ds 15   ;   ┐

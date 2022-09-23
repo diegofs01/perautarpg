@@ -1,11 +1,6 @@
 INCLUDE "hardware.inc"
 
 SECTION "Tile Set Functions", ROMX
-;   Copia os ponteiros de dados do Tileset
-;   Retorna:
-;       DE = Endereço dos dados do TileSet
-;       BC = Tamanho em bytes do TileSet
-;       HL = Endereço da VRAM pertencente ao TileSet
 GetTileSetData::
     ld a, [ActiveTilesetId]         ;   Copia o ID do Tileset Atual no acumulador
     sla a                           ;   ┐

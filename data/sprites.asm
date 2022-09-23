@@ -42,30 +42,26 @@ CopySpriteOAMDataToWRAM::
 	ld a, b				                ;   ┐ Copia a quantidade de bytes restantes pro acumulador
 	or a, c				                ;   ┘
 	jp nz, .copyTiles	                ;   Pula de volta pro começo da função caso a flag Z (zero) nao estiver setado
-
 	ret									;	retorna para a função anterior
 
 SECTION "Sprite Data", ROMX
 
-;SpritesTiles:			INCBIN "data/sprites/sprites01.chr"
-;SpriteTilesBytesLength	EQU 64
+DEF CursorTile		EQU 0
+DEF PlayerLeftTile	EQU 2
+DEF PlayerRightTile	EQU 6
+DEF PlayerDownTile	EQU 14
+DEF PlayerUpTile	EQU 10
 
-SpritesTiles: ;sprites
-	DB $00,$00,$00,$00,$00,$00,$00,$00
-	DB $00,$00,$00,$00,$00,$00,$00,$00
-	DB $00,$00,$00,$00,$00,$00,$00,$00
-	DB $00,$00,$00,$00,$00,$00,$00,$00
-	DB $FF,$00,$FF,$7E,$C3,$7E,$C3,$66
-	DB $C3,$66,$C3,$7E,$FF,$7E,$FF,$00
-	DB $1F,$1F,$01,$01,$01,$01,$03,$03
-	DB $06,$06,$0C,$0C,$18,$18,$10,$10
-	DB $C0,$C0,$70,$30,$70,$30,$20,$20
-	DB $20,$A0,$C0,$C0,$86,$86,$8C,$8C
-	DB $F8,$F8,$80,$80,$80,$80,$C0,$C0
-	DB $60,$60,$30,$30,$18,$18,$08,$08
-DEF SpriteTilesBytesLength EQU 96
+;Tiles:
+TileIndexes::
+	db CursorTile
+	db PlayerLeftTile
+	db PlayerRightTile
+	db PlayerDownTile
+	db PlayerUpTile
 
-;SpriteTilesBytesLength	EQU 2048
+SpritesTiles:			INCBIN "data/sprites/sprites01.chr"
+SpriteTilesBytesLength	EQU 288
 
 ; DB Y, X, Tile Index, Attributes/Flags
 ;						Bit7   BG and Window over OBJ (0=No, 1=BG and Window colors 1-3 over the OBJ)
@@ -75,33 +71,10 @@ DEF SpriteTilesBytesLength EQU 96
 ;						Bit3   Tile VRAM-Bank  **CGB Mode Only**     (0=Bank 0, 1=Bank 1)
 ;						Bit2-0 Palette number  **CGB Mode Only**     (OBP0-7)
 SpritesData:
-	DB 0, 0, 0, %00000000
-	DB 80, 80, 2, %00000000
-	;DB 80, 88, 2, %00100000
-	DB 80, 88, 4, %00000000
+	DB 0, 0, CursorTile, %00000000
+	DB 80, 80, PlayerUpTile, %00000000
+	DB 80, 88, PlayerUpTile+2, %00000000
 DEF SpritesDataBytesLength EQU 12
 
-;SpritesPaletteData:			INCBIN "data/sprites/sprites01.pal"
-;SpritesPaletteBytesToWrite	EQU 8
-
-;DummySpriteData: DS 160
-
-SpritesPaletteData:
-	; Gameboy Color palette 0
-	db %11111111, %01111111, %00010000, %01000010, %00011111, %00000000, %00000000, %00000000
-;	; Gameboy Color palette 1
-;	db %10111100, %00010111, %11100111, %00100010, %11000100, %00011001, %11100000, %00010100
-;	; Gameboy Color palette 2
-;	db %10111100, %00010111, %11100111, %00100010, %11000100, %00011001, %11100000, %00010100
-;	; Gameboy Color palette 3
-;	db %10111100, %00010111, %11100111, %00100010, %11000100, %00011001, %11100000, %00010100
-;	; Gameboy Color palette 4
-;	db %10111100, %00010111, %11100111, %00100010, %11000100, %00011001, %11100000, %00010100
-;	; Gameboy Color palette 5
-;	db %10111100, %00010111, %11100111, %00100010, %11000100, %00011001, %11100000, %00010100
-;	; Gameboy Color palette 6
-;	db %10111100, %00010111, %11100111, %00100010, %11000100, %00011001, %11100000, %00010100
-;	; Gameboy Color palette 7
-;	db %10111100, %00010111, %11100111, %00100010, %11000100, %00011001, %11100000, %00010100
-;DEF SpritesPaletteBytesToWrite EQU 64 ; fixed, 8 pallete, 4 color, 2 bytes/color = 64 bytes
+SpritesPaletteData:			INCBIN "data/sprites/sprites01.pal"
 SpritesPaletteBytesToWrite	EQU 8
